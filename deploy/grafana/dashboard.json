@@ -1,0 +1,82 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "HackSphere Dashboard",
+    "tags": ["hacksphere", "hackathon"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Requests",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(hacksphere_requests_total[5m])",
+            "legendFormat": "{{method}} {{endpoint}} {{status_code}}"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Request Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(hacksphere_request_latency_seconds_bucket[5m]))",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(hacksphere_request_latency_seconds_bucket[5m]))",
+            "legendFormat": "p99"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Active WebSockets",
+        "type": "singlestat",
+        "targets": [
+          {
+            "expr": "hacksphere_active_websockets"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Active Teams",
+        "type": "singlestat",
+        "targets": [
+          {
+            "expr": "hacksphere_active_teams"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Violations",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(hacksphere_violations_total[5m])",
+            "legendFormat": "{{type}}"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Score Updates",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(hacksphere_score_updates_total[5m])"
+          }
+        ]
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "10s"
+  }
+}

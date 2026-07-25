@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - DEBUG=true
+      - ENVIRONMENT=development
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
+    networks:
+      - hacksphere
+
+  postgres:
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: hacksphere
+      POSTGRES_PASSWORD: hacksphere_dev_password
+      POSTGRES_DB: hacksphere
+    networks:
+      - hacksphere
+
+  redis:
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    networks:
+      - hacksphere
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    command: celery -A app.core.celery worker --loglevel=debug --concurrency=2 -Q default,quiz,debugging
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    networks:
+      - hacksphere
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    command: celery -A app.core.celery beat --loglevel=debug
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    networks:
+      - hacksphere
+
+networks:
+  hacksphere:
+    driver: bridge

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hacksphere
+  labels:
+    app.kubernetes.io/name: hacksphere
+    app.kubernetes.io/version: "1.0.0"
