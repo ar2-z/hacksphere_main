@@ -17,21 +17,23 @@ export default function DashboardPage() {
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin'
 
   const [competitionId, setCompetitionId] = useState<string>('')
-  const { data: competitions, loading: compLoading } = useFetch<Competition[]>('/competitions/')
+  const { data: competitionsRes, loading: compLoading } = useFetch<{ data: Competition[]; total: number } | Competition[]>('/competitions/')
+  const competitions: Competition[] = Array.isArray(competitionsRes) ? competitionsRes : competitionsRes?.data ?? []
   const { data: adminStats } = useFetch<AdminDashboard>(
     isAdmin && competitionId ? `/admin/dashboard/${competitionId}` : null,
     [competitionId]
   )
   const { data: leaderboard } = useFetch<Leaderboard>(
-    !isAdmin && competitionId ? `/leaderboard/${competitionId}` : null,
+    !isAdmin && competitionId ? `/scores/leaderboard/${competitionId}` : null,
     [competitionId]
   )
-  const { data: announcements } = useFetch<Announcement[]>(
+  const { data: announcementsRes } = useFetch<{ data: Announcement[] } | Announcement[]>(
     competitionId ? `/admin/announcements/${competitionId}` : null,
     [competitionId]
   )
+  const announcements: Announcement[] = Array.isArray(announcementsRes) ? announcementsRes : announcementsRes?.data ?? []
 
-  const activeCompetitions = competitions?.filter((c) => c.status === 'active') ?? []
+  const activeCompetitions = competitions.filter((c) => c.status === 'active') ?? []
   const allCompetitions = competitions ?? []
 
   if (!isAdmin && !compLoading && allCompetitions.length > 0 && !competitionId) {
