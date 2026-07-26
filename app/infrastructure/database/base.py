@@ -21,7 +21,11 @@ class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=convention)
 
 
-_is_postgres = settings.DATABASE_URL.startswith("postgresql")
+_db_url = settings.DATABASE_URL
+if _db_url.startswith("postgresql://") and "+asyncpg" not in _db_url:
+    _db_url = _db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+_is_postgres = _db_url.startswith("postgresql")
 
 _engine_kwargs: dict = {
     "echo": settings.DATABASE_ECHO,
@@ -39,7 +43,7 @@ if _is_postgres:
         "ssl": _ssl.create_default_context(),
     }
 
-engine = create_async_engine(settings.DATABASE_URL, **_engine_kwargs)
+engine = create_async_engine(_db_url, **_engine_kwargs)
 
 async_session_factory = async_sessionmaker(
     engine,
