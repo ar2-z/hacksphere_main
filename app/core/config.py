@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "change-me"
     ALLOWED_HOSTS: list[str] = ["localhost", "127.0.0.1"]
 
+    # Server (LAN hosting)
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+
     # Security
     JWT_SECRET_KEY: str = "change-me"
     JWT_ALGORITHM: str = "HS256"

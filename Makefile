@@ -1,4 +1,4 @@
-.PHONY: help install dev test lint format run migrate seed docker-up docker-down docker-logs backup restore
+.PHONY: help install dev test lint format run migrate seed seed-admins start start-lan docker-up docker-down docker-logs backup restore
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -35,8 +35,20 @@ migrate-create: ## Create new migration
 seed: ## Seed database with test data
 	python -m app.tasks.seed
 
+seed-admins: ## Seed admin accounts with shared password
+	python scripts/seed_admins.py
+
 run: ## Run the application
 	uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+start: ## Start server with admin seed and LAN info
+	python scripts/start.py --seed-admins
+
+start-lan: ## Start server for LAN access with admin seed
+	python scripts/start.py --seed-admins --host 0.0.0.0 --port 8000
+
+start-reload: ## Start server with auto-reload
+	python scripts/start.py --seed-admins --reload
 
 docker-up: ## Start all services with Docker
 	docker-compose up -d

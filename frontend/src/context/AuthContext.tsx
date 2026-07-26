@@ -50,8 +50,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await api.post('/auth/login', { email, password })
     localStorage.setItem('access_token', res.data.access_token)
     localStorage.setItem('refresh_token', res.data.refresh_token)
-    const me = await api.get('/auth/me')
-    setUser(me.data)
+    if (res.data.user) {
+      setUser(res.data.user)
+    } else {
+      const me = await api.get('/auth/me')
+      setUser(me.data)
+    }
   }
 
   const register = async (data: {

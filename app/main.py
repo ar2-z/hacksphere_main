@@ -39,9 +39,16 @@ except ImportError:
 logger = structlog.get_logger()
 
 
+def _get_cors_origins() -> list[str]:
+    origins = list(settings.CORS_ORIGINS)
+    if "*" not in origins:
+        origins.append("*")
+    return origins
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    logger.info("Starting HackSphere", env=settings.APP_ENV)
+    logger.info("Starting HackSphere", env=settings.APP_ENV, host=settings.HOST, port=settings.PORT)
     await cache.connect()
     await init_db()
     logger.info("Database initialized")
@@ -63,7 +70,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=_get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

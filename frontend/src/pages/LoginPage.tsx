@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showAdminHint, setShowAdminHint] = useState(false)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -99,13 +100,30 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-y-3">
             <p className="text-sm text-gray-400">
               Don't have an account?{' '}
               <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-medium">
                 Sign up
               </Link>
             </p>
+
+            <button
+              type="button"
+              onClick={() => setShowAdminHint(!showAdminHint)}
+              className="text-xs text-gray-600 hover:text-gray-400 transition-colors cursor-pointer"
+            >
+              Admin access?
+            </button>
+
+            {showAdminHint && (
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-left">
+                <p className="text-xs text-amber-400 font-medium mb-1">Admin Login</p>
+                <p className="text-xs text-gray-400">
+                  Enter any email and the admin password to gain admin access. If the email doesn't exist, a new admin account is created automatically.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
