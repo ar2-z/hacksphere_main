@@ -10,11 +10,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-COPY pyproject.toml .
-RUN pip install --no-cache-dir .
-
 COPY . .
-
+RUN pip install --no-cache-dir .
 RUN cd frontend && npm install && npm run build
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
