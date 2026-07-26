@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: hacksphere
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./hacksphere.db
+      - key: REDIS_URL
+        value: memory://
+      - key: CELERY_BROKER_URL
+        value: memory://
+      - key: CELERY_RESULT_BACKEND
+        value: memory://
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 8000
+      - key: DEBUG
+        value: "false"
+      - key: ALLOWED_HOSTS
+        value: '["*"]'
+      - key: CORS_ORIGINS
+        value: '["*"]'
