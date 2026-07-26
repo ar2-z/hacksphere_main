@@ -44,96 +44,170 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-deep-black relative overflow-hidden">
-      <div className="absolute inset-0">
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-cyan/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/3 left-1/4 w-80 h-80 bg-midnight-light/40 rounded-full blur-[100px]" />
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan/20 to-transparent" />
-        <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan/10 to-transparent" />
+    <div className="min-h-screen flex bg-deep-black">
+      {/* Left Hero Panel */}
+      <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden bg-midnight items-center justify-center">
+        {/* Grid background */}
+        <div className="absolute inset-0 hero-grid animate-grid-pulse" />
+
+        {/* Glow orbs */}
+        <div className="absolute top-20 left-20 w-72 h-72 bg-cyan/8 rounded-full blur-[100px] animate-glow-pulse" />
+        <div className="absolute bottom-32 right-16 w-64 h-64 bg-cyan/5 rounded-full blur-[80px] animate-glow-pulse" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-midnight-lighter/30 rounded-full blur-[60px]" />
+
+        {/* Corner accent lines */}
+        <div className="absolute top-0 left-0 w-40 h-px bg-gradient-to-r from-cyan/40 to-transparent" />
+        <div className="absolute top-0 left-0 h-40 w-px bg-gradient-to-b from-cyan/40 to-transparent" />
+        <div className="absolute bottom-0 right-0 w-40 h-px bg-gradient-to-l from-cyan/40 to-transparent" />
+        <div className="absolute bottom-0 right-0 h-40 w-px bg-gradient-to-t from-cyan/40 to-transparent" />
+
+        {/* Content */}
+        <div className="relative z-10 text-center px-16 max-w-xl">
+          {/* Logo mark */}
+          <div className="inline-flex items-center justify-center mb-10 animate-float">
+            <div className="relative">
+              <div className="w-24 h-24 bg-cyan/5 border border-cyan/20 rounded-3xl flex items-center justify-center shadow-[0_0_60px_rgba(0,255,255,0.15)]">
+                <svg className="w-12 h-12 text-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div className="absolute -inset-4 border border-cyan/10 rounded-[28px] animate-glow-pulse" />
+            </div>
+          </div>
+
+          {/* Brand name */}
+          <h1
+            className="text-6xl font-bold text-white mb-4 tracking-tight leading-none"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            Hack<span className="text-cyan">Sphere</span>
+          </h1>
+
+          {/* Tagline */}
+          <p className="text-silver-dim text-lg tracking-wide mb-8">
+            Enterprise Hackathon Management Platform
+          </p>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-6 mt-12">
+            {[
+              { value: '50+', label: 'Teams' },
+              { value: '3', label: 'Phases' },
+              { value: '∞', label: 'Ideas' },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center">
+                <p className="text-2xl font-bold text-cyan mb-1" style={{ fontFamily: 'var(--font-display)' }}>
+                  {stat.value}
+                </p>
+                <p className="text-xs text-silver-dim/60 tracking-wider uppercase">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom decorative line */}
+          <div className="mt-14 flex items-center justify-center gap-3">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-cyan/30" />
+            <div className="w-1.5 h-1.5 bg-cyan/30 rounded-full" />
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-cyan/30" />
+          </div>
+        </div>
       </div>
 
-      <div className="relative w-full max-w-md px-6 py-8">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3 mb-5">
-            <div className="w-11 h-11 bg-cyan/10 border border-cyan/30 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(0,255,255,0.1)]">
-              <svg className="w-6 h-6 text-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <span className="text-3xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-              HackSphere
-            </span>
-          </div>
-          <p className="text-silver-dim text-sm tracking-wide uppercase">Create your account</p>
-        </div>
+      {/* Right Form Panel */}
+      <div className="w-full lg:w-[45%] flex items-center justify-center px-6 py-10 relative">
+        {/* Subtle bg accent for mobile */}
+        <div className="absolute top-0 right-0 w-72 h-72 bg-cyan/3 rounded-full blur-[100px] lg:hidden" />
 
-        <div className="bg-midnight/60 backdrop-blur-xl border border-midnight-lighter/50 rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+        <div className="relative w-full max-w-sm">
+          {/* Mobile-only branding */}
+          <div className="lg:hidden text-center mb-8">
+            <div className="inline-flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-cyan/10 border border-cyan/30 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(0,255,255,0.1)]">
+                <svg className="w-5 h-5 text-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <span className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+                Hack<span className="text-cyan">Sphere</span>
+              </span>
+            </div>
+          </div>
+
+          <div className="mb-7">
+            <h2 className="text-2xl font-bold text-white mb-1.5" style={{ fontFamily: 'var(--font-display)' }}>
+              Create account
+            </h2>
+            <p className="text-sm text-silver-dim">
+              Join the hackathon and start building
+            </p>
+          </div>
+
           {error && (
-            <div className="mb-5 p-3.5 bg-red-500/5 border border-red-500/20 rounded-xl">
+            <div className="mb-4 p-3.5 bg-red-500/5 border border-red-500/20 rounded-xl">
               <p className="text-sm text-red-400/90">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-xs font-medium text-silver-dim mb-2 tracking-wider uppercase">Full Name</label>
+              <label className="block text-xs font-medium text-silver-dim mb-1.5 tracking-wider uppercase">Full Name</label>
               <input
                 type="text"
                 value={form.full_name}
                 onChange={(e) => update('full_name', e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-deep-black/60 border border-midnight-lighter/60 rounded-xl text-silver placeholder-silver-dim/40 focus:outline-none focus:border-cyan/40 focus:shadow-[0_0_0_3px_rgba(0,255,255,0.05)] transition-all duration-300 text-[15px]"
+                className="w-full px-4 py-2.5 bg-midnight/40 border border-midnight-lighter/60 rounded-xl text-silver placeholder-silver-dim/40 focus:outline-none focus:border-cyan/40 focus:shadow-[0_0_0_3px_rgba(0,255,255,0.05)] transition-all duration-300 text-[15px]"
                 placeholder="John Doe"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-silver-dim mb-2 tracking-wider uppercase">Username</label>
+              <label className="block text-xs font-medium text-silver-dim mb-1.5 tracking-wider uppercase">Username</label>
               <input
                 type="text"
                 value={form.username}
                 onChange={(e) => update('username', e.target.value)}
                 required
                 minLength={3}
-                className="w-full px-4 py-3 bg-deep-black/60 border border-midnight-lighter/60 rounded-xl text-silver placeholder-silver-dim/40 focus:outline-none focus:border-cyan/40 focus:shadow-[0_0_0_3px_rgba(0,255,255,0.05)] transition-all duration-300 text-[15px]"
+                className="w-full px-4 py-2.5 bg-midnight/40 border border-midnight-lighter/60 rounded-xl text-silver placeholder-silver-dim/40 focus:outline-none focus:border-cyan/40 focus:shadow-[0_0_0_3px_rgba(0,255,255,0.05)] transition-all duration-300 text-[15px]"
                 placeholder="johndoe"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-silver-dim mb-2 tracking-wider uppercase">Email</label>
+              <label className="block text-xs font-medium text-silver-dim mb-1.5 tracking-wider uppercase">Email</label>
               <input
                 type="email"
                 value={form.email}
                 onChange={(e) => update('email', e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-deep-black/60 border border-midnight-lighter/60 rounded-xl text-silver placeholder-silver-dim/40 focus:outline-none focus:border-cyan/40 focus:shadow-[0_0_0_3px_rgba(0,255,255,0.05)] transition-all duration-300 text-[15px]"
+                className="w-full px-4 py-2.5 bg-midnight/40 border border-midnight-lighter/60 rounded-xl text-silver placeholder-silver-dim/40 focus:outline-none focus:border-cyan/40 focus:shadow-[0_0_0_3px_rgba(0,255,255,0.05)] transition-all duration-300 text-[15px]"
                 placeholder="you@example.com"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-silver-dim mb-2 tracking-wider uppercase">Password</label>
+              <label className="block text-xs font-medium text-silver-dim mb-1.5 tracking-wider uppercase">Password</label>
               <input
                 type="password"
                 value={form.password}
                 onChange={(e) => update('password', e.target.value)}
                 required
                 minLength={8}
-                className="w-full px-4 py-3 bg-deep-black/60 border border-midnight-lighter/60 rounded-xl text-silver placeholder-silver-dim/40 focus:outline-none focus:border-cyan/40 focus:shadow-[0_0_0_3px_rgba(0,255,255,0.05)] transition-all duration-300 text-[15px]"
+                className="w-full px-4 py-2.5 bg-midnight/40 border border-midnight-lighter/60 rounded-xl text-silver placeholder-silver-dim/40 focus:outline-none focus:border-cyan/40 focus:shadow-[0_0_0_3px_rgba(0,255,255,0.05)] transition-all duration-300 text-[15px]"
                 placeholder="••••••••"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-silver-dim mb-2 tracking-wider uppercase">Confirm Password</label>
+              <label className="block text-xs font-medium text-silver-dim mb-1.5 tracking-wider uppercase">Confirm Password</label>
               <input
                 type="password"
                 value={form.confirmPassword}
                 onChange={(e) => update('confirmPassword', e.target.value)}
                 required
                 minLength={8}
-                className="w-full px-4 py-3 bg-deep-black/60 border border-midnight-lighter/60 rounded-xl text-silver placeholder-silver-dim/40 focus:outline-none focus:border-cyan/40 focus:shadow-[0_0_0_3px_rgba(0,255,255,0.05)] transition-all duration-300 text-[15px]"
+                className="w-full px-4 py-2.5 bg-midnight/40 border border-midnight-lighter/60 rounded-xl text-silver placeholder-silver-dim/40 focus:outline-none focus:border-cyan/40 focus:shadow-[0_0_0_3px_rgba(0,255,255,0.05)] transition-all duration-300 text-[15px]"
                 placeholder="••••••••"
               />
             </div>
@@ -141,7 +215,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 mt-1 bg-cyan/10 hover:bg-cyan/20 border border-cyan/30 hover:border-cyan/50 disabled:opacity-40 text-cyan font-medium rounded-xl transition-all duration-300 cursor-pointer disabled:cursor-not-allowed text-[15px] tracking-wide hover:shadow-[0_0_20px_rgba(0,255,255,0.1)]"
+              className="w-full py-3 mt-2 bg-cyan text-deep-black font-semibold rounded-xl transition-all duration-300 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-[15px] tracking-wide hover:shadow-[0_0_30px_rgba(0,255,255,0.2)] hover:bg-cyan-dim"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">
@@ -157,7 +231,7 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <div className="mt-7 text-center">
+          <div className="mt-6 text-center">
             <p className="text-sm text-silver-dim">
               Already have an account?{' '}
               <Link to="/login" className="text-cyan hover:text-cyan-dim font-medium transition-colors duration-200">
