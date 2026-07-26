@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 
-from sqlalchemy import MetaData, text
+from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -21,23 +21,15 @@ class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=convention)
 
 
-_is_sqlite = settings.DATABASE_URL.startswith("sqlite")
-
-_engine_kwargs: dict = {
-    "echo": settings.DATABASE_ECHO,
-    "pool_pre_ping": True,
-}
-
-if _is_sqlite:
-    from sqlalchemy.pool import StaticPool
-
-    _engine_kwargs["connect_args"] = {"check_same_thread": False}
-    _engine_kwargs["poolclass"] = StaticPool
-else:
-    _engine_kwargs["pool_size"] = settings.DATABASE_POOL_SIZE
-    _engine_kwargs["max_overflow"] = settings.DATABASE_MAX_OVERFLOW
-
-engine = create_async_engine(settings.DATABASE_URL, **_engine_kwargs)
+engine = create_async_engine(
+    settings.DATABASE_URL,
+    echo=settings.DATABASE_ECHO,
+    pool_pre_ping=True,
+    pool_size=settings.DATABASE_POOL_SIZE,
+    max_overflow=settings.DATABASE_MAX_OVERFLOW,
+    pool_recycle=300,
+    pool_timeout=30,
+)
 
 async_session_factory = async_sessionmaker(
     engine,
@@ -60,10 +52,6 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 async def init_db() -> None:
     async with engine.begin() as conn:
-        if _is_sqlite:
-            await conn.execute(text("PRAGMA journal_mode=WAL"))
-            await conn.execute(text("PRAGMA busy_timeout=5000"))
-            await conn.execute(text("PRAGMA synchronous=NORMAL"))
         await conn.run_sync(Base.metadata.create_all)
 
 

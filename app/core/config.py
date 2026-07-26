@@ -33,8 +33,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    # Database
-    DATABASE_URL: str = "sqlite+aiosqlite:///./hacksphere.db"
+    # Database (PostgreSQL primary, SQLite fallback for local dev)
+    DATABASE_URL: str = "postgresql+asyncpg://hacksphere:hacksphere@localhost:5432/hacksphere"
     DATABASE_POOL_SIZE: int = 20
     DATABASE_MAX_OVERFLOW: int = 10
     DATABASE_ECHO: bool = False

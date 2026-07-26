@@ -12,7 +12,9 @@ services:
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        value: sqlite+aiosqlite:///./hacksphere.db
+        fromDatabase:
+          name: hacksphere-db
+          property: connectionString
       - key: REDIS_URL
         value: memory://
       - key: CELERY_BROKER_URL
@@ -29,3 +31,9 @@ services:
         value: '["*"]'
       - key: CORS_ORIGINS
         value: '["*"]'
+
+  - type: pserv
+    name: hacksphere-db
+    plan: free
+    database: postgres
+    ipAllowList: []
