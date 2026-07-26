@@ -26,35 +26,39 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-indigo-950">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
+    <div className="min-h-screen flex items-center justify-center bg-deep-black relative overflow-hidden">
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-midnight-light/40 rounded-full blur-[100px]" />
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan/20 to-transparent" />
+        <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan/10 to-transparent" />
       </div>
 
       <div className="relative w-full max-w-md px-6">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-3 mb-5">
+            <div className="w-11 h-11 bg-cyan/10 border border-cyan/30 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(0,255,255,0.1)]">
+              <svg className="w-6 h-6 text-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <span className="text-2xl font-bold text-white">HackSphere</span>
+            <span className="text-3xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+              HackSphere
+            </span>
           </div>
-          <p className="text-gray-400">Sign in to your account</p>
+          <p className="text-silver-dim text-sm tracking-wide uppercase">Sign in to your account</p>
         </div>
 
-        <div className="bg-gray-900/60 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 shadow-2xl">
+        <div className="bg-midnight/60 backdrop-blur-xl border border-midnight-lighter/50 rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
           {error && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-              <p className="text-sm text-red-400">{error}</p>
+            <div className="mb-5 p-3.5 bg-red-500/5 border border-red-500/20 rounded-xl">
+              <p className="text-sm text-red-400/90">{error}</p>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              <label className="block text-xs font-medium text-silver-dim mb-2 tracking-wider uppercase">
                 Email
               </label>
               <input
@@ -62,13 +66,13 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 bg-deep-black/60 border border-midnight-lighter/60 rounded-xl text-silver placeholder-silver-dim/40 focus:outline-none focus:border-cyan/40 focus:shadow-[0_0_0_3px_rgba(0,255,255,0.05)] transition-all duration-300 text-[15px]"
                 placeholder="you@example.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              <label className="block text-xs font-medium text-silver-dim mb-2 tracking-wider uppercase">
                 Password
               </label>
               <input
@@ -76,7 +80,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 bg-deep-black/60 border border-midnight-lighter/60 rounded-xl text-silver placeholder-silver-dim/40 focus:outline-none focus:border-cyan/40 focus:shadow-[0_0_0_3px_rgba(0,255,255,0.05)] transition-all duration-300 text-[15px]"
                 placeholder="••••••••"
               />
             </div>
@@ -84,7 +88,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 text-white font-medium rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed"
+              className="w-full py-3 bg-cyan/10 hover:bg-cyan/20 border border-cyan/30 hover:border-cyan/50 disabled:opacity-40 text-cyan font-medium rounded-xl transition-all duration-300 cursor-pointer disabled:cursor-not-allowed text-[15px] tracking-wide hover:shadow-[0_0_20px_rgba(0,255,255,0.1)]"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">
@@ -100,10 +104,10 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center space-y-3">
-            <p className="text-sm text-gray-400">
+          <div className="mt-7 text-center space-y-3">
+            <p className="text-sm text-silver-dim">
               Don't have an account?{' '}
-              <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-medium">
+              <Link to="/register" className="text-cyan hover:text-cyan-dim font-medium transition-colors duration-200">
                 Sign up
               </Link>
             </p>
@@ -111,15 +115,15 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setShowAdminHint(!showAdminHint)}
-              className="text-xs text-gray-600 hover:text-gray-400 transition-colors cursor-pointer"
+              className="text-xs text-silver-dim/50 hover:text-silver-dim transition-colors duration-200 cursor-pointer"
             >
               Admin access?
             </button>
 
             {showAdminHint && (
-              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-left">
-                <p className="text-xs text-amber-400 font-medium mb-1">Admin Login</p>
-                <p className="text-xs text-gray-400">
+              <div className="p-3.5 bg-midnight-light/30 border border-midnight-lighter/40 rounded-xl text-left">
+                <p className="text-xs text-cyan/80 font-medium mb-1 tracking-wide uppercase">Admin Login</p>
+                <p className="text-xs text-silver-dim/70 leading-relaxed">
                   Enter any email and the admin password to gain admin access. If the email doesn't exist, a new admin account is created automatically.
                 </p>
               </div>
@@ -127,7 +131,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="mt-8 text-center text-xs text-gray-600">
+        <p className="mt-8 text-center text-[11px] text-silver-dim/30 tracking-widest uppercase">
           Enterprise Hackathon Management Platform
         </p>
       </div>
