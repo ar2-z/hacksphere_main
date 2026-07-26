@@ -2,9 +2,20 @@ import { useState } from 'react'
 import Layout from '../../components/Layout'
 import { useFetch } from '../../lib/hooks'
 import api from '../../lib/api'
-import type { Competition, Presentation, PresentationScore } from '../../lib/types'
+import type { Competition, PresentationScore } from '../../lib/types'
 
-interface PresentationWithScores extends Presentation {
+interface PresentationQueueItem {
+  presentation_id: number
+  team_id: number
+  team_name: string
+  presentation_order: number | null
+  status: string
+  problem_category: string
+  presented_at: string | null
+  total_score: number | null
+}
+
+interface PresentationWithScores extends PresentationQueueItem {
   scores?: PresentationScore[]
 }
 
@@ -18,7 +29,7 @@ const statusColors: Record<string, string> = {
 export default function AdminIdeathonPage() {
   const [competitionId, setCompetitionId] = useState<string>('')
   const { data: competitions } = useFetch<Competition[]>('/competitions/')
-  const { data: presentations, loading, refetch } = useFetch<Presentation[]>(
+  const { data: presentations, loading, refetch } = useFetch<PresentationQueueItem[]>(
     competitionId ? `/ideathon/competitions/${competitionId}/queue` : null,
     [competitionId]
   )
@@ -184,7 +195,7 @@ export default function AdminIdeathonPage() {
         ) : presentations && presentations.length > 0 ? (
           <div className="space-y-3 animate-fade-in-up">
             {presentations.map((p) => (
-              <div key={p.id} className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-5 hover:border-midnight-lighter/60 transition-all">
+              <div key={p.presentation_id} className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-5 hover:border-midnight-lighter/60 transition-all">
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div className="flex items-center gap-4 min-w-0">
                     {p.presentation_order != null && (
@@ -196,7 +207,7 @@ export default function AdminIdeathonPage() {
                     )}
                     <div className="min-w-0">
                       <h3 className="text-sm font-semibold text-white truncate">{p.team_name}</h3>
-                      <p className="text-xs text-silver-dim truncate max-w-lg">{p.idea_summary}</p>
+                      <p className="text-xs text-silver-dim truncate max-w-lg">{p.problem_category}</p>
                     </div>
                   </div>
 
@@ -213,8 +224,8 @@ export default function AdminIdeathonPage() {
                     <div className="flex items-center gap-2">
                       {p.status === 'pending' && (
                         <button
-                          onClick={() => handleAction(p.id, 'start')}
-                          disabled={actionLoading === p.id}
+                          onClick={() => handleAction(p.presentation_id, 'start')}
+                          disabled={actionLoading === p.presentation_id}
                           className="bg-cyan/10 hover:bg-cyan/20 text-cyan border border-cyan/30 rounded-lg px-3 py-1.5 text-xs font-medium transition-all cursor-pointer disabled:opacity-40"
                         >
                           Start
@@ -222,8 +233,8 @@ export default function AdminIdeathonPage() {
                       )}
                       {p.status === 'in_progress' && (
                         <button
-                          onClick={() => handleAction(p.id, 'complete')}
-                          disabled={actionLoading === p.id}
+                          onClick={() => handleAction(p.presentation_id, 'complete')}
+                          disabled={actionLoading === p.presentation_id}
                           className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg px-3 py-1.5 text-xs font-medium transition-all cursor-pointer disabled:opacity-40"
                         >
                           Complete
@@ -236,8 +247,8 @@ export default function AdminIdeathonPage() {
                         Score
                       </button>
                       <button
-                        onClick={() => viewScores(p.id)}
-                        disabled={actionLoading === p.id}
+                        onClick={() => viewScores(p.presentation_id)}
+                        disabled={actionLoading === p.presentation_id}
                         className="bg-midnight-light/40 hover:bg-midnight-light/60 text-silver border border-midnight-lighter/40 rounded-lg px-3 py-1.5 text-xs font-medium transition-all cursor-pointer disabled:opacity-40"
                       >
                         View Scores
@@ -335,11 +346,11 @@ export default function AdminIdeathonPage() {
                 Cancel
               </button>
               <button
-                onClick={() => selectedPresentation && handleScore(selectedPresentation.id)}
-                disabled={!scoreForm.category || !scoreForm.score || actionLoading === selectedPresentation?.id}
+                onClick={() => selectedPresentation && handleScore(selectedPresentation.presentation_id)}
+                disabled={!scoreForm.category || !scoreForm.score || actionLoading === selectedPresentation?.presentation_id}
                 className="bg-cyan/10 hover:bg-cyan/20 text-cyan border border-cyan/30 rounded-lg px-4 py-2 text-sm font-medium transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {actionLoading === selectedPresentation?.id ? 'Submitting...' : 'Submit Score'}
+                {actionLoading === selectedPresentation?.presentation_id ? 'Submitting...' : 'Submit Score'}
               </button>
             </div>
           </div>

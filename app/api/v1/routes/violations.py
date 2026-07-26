@@ -248,6 +248,16 @@ async def get_competition_violations(
     return await violation_service.get_competition_violations(competition_id)
 
 
+@router.get("/competition/{competition_id}/list")
+async def list_competition_violations(
+    competition_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.SUPER_ADMIN, UserRole.ADMIN)),
+) -> list[dict]:
+    violation_service = ViolationService(db)
+    return await violation_service.list_competition_violations(competition_id)
+
+
 @router.get("/stats/{competition_id}")
 async def get_violation_stats(
     competition_id: int,

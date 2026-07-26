@@ -12,7 +12,12 @@ export function useFetch<T>(url: string | null, deps: unknown[] = []) {
       setLoading(true)
       setError(null)
       const res = await api.get(url)
-      setData(res.data)
+      const body = res.data
+      if (body && typeof body === 'object' && Array.isArray(body.data) && 'total' in body) {
+        setData(body.data as T)
+      } else {
+        setData(body as T)
+      }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Request failed'
       setError(msg)

@@ -8,6 +8,14 @@ interface ClueWithDistribution extends Clue {
   is_revealed?: boolean
 }
 
+interface TeamCluesResponse {
+  team_id: number
+  team_name: string
+  total_clues: number
+  revealed_clues: number
+  clues: ClueWithDistribution[]
+}
+
 const typeConfig: Record<string, { label: string; color: string; icon: string }> = {
   text: { label: 'Text', color: 'bg-blue-500/10 text-blue-400 border-blue-500/30', icon: 'M4 6h16M4 12h16M4 18h7' },
   code: { label: 'Code', color: 'bg-cyan/10 text-cyan border-cyan/30', icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4' },
@@ -19,10 +27,11 @@ export default function CluesPage() {
   const [selectedCompId, setSelectedCompId] = useState<number | null>(null)
   const compId = selectedCompId ?? competitions?.[0]?.id ?? null
 
-  const { data: clues, loading: cluesLoading, error: cluesError } = useFetch<ClueWithDistribution[]>(
+  const { data: teamCluesRes, loading: cluesLoading, error: cluesError } = useFetch<TeamCluesResponse>(
     compId ? `/clues/my-clues?competition_id=${compId}` : null,
     [compId]
   )
+  const clues: ClueWithDistribution[] = teamCluesRes?.clues ?? []
 
   return (
     <Layout>

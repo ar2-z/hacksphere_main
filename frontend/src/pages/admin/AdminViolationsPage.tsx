@@ -5,11 +5,11 @@ import api from '../../lib/api'
 import type { Competition, Violation } from '../../lib/types'
 
 interface ViolationStats {
-  total: number
-  resolved: number
-  unresolved: number
-  by_severity: Record<string, number>
+  competition_id: number
+  total_violations: number
   by_type: Record<string, number>
+  by_severity: Record<string, number>
+  by_action: Record<string, number>
 }
 
 const severityColors: Record<string, string> = {
@@ -23,11 +23,11 @@ export default function AdminViolationsPage() {
   const [competitionId, setCompetitionId] = useState<string>('')
   const { data: competitions } = useFetch<Competition[]>('/competitions/')
   const { data: violations, loading, refetch } = useFetch<Violation[]>(
-    competitionId ? `/violations/competition/${competitionId}` : null,
+    competitionId ? `/violations/competition/${competitionId}/list` : null,
     [competitionId]
   )
   const { data: stats } = useFetch<ViolationStats>(
-    competitionId ? `/violations/stats/${competitionId}` : null,
+    competitionId ? `/violations/competition/${competitionId}` : null,
     [competitionId]
   )
   const [actionModal, setActionModal] = useState<{ violationId: number; type: 'action' | 'resolve' } | null>(null)
@@ -97,26 +97,14 @@ export default function AdminViolationsPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 animate-fade-in-up">
             <div className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-4">
               <p className="text-xs text-silver-dim uppercase tracking-wider mb-1">Total</p>
-              <p className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>{stats.total}</p>
+              <p className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>{stats.total_violations}</p>
             </div>
-            <div className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-4">
-              <p className="text-xs text-silver-dim uppercase tracking-wider mb-1">Unresolved</p>
-              <p className="text-2xl font-bold text-orange-400" style={{ fontFamily: 'var(--font-display)' }}>{stats.unresolved}</p>
-            </div>
-            <div className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-4">
-              <p className="text-xs text-silver-dim uppercase tracking-wider mb-1">Resolved</p>
-              <p className="text-2xl font-bold text-emerald-400" style={{ fontFamily: 'var(--font-display)' }}>{stats.resolved}</p>
-            </div>
-            <div className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-4">
-              <p className="text-xs text-silver-dim uppercase tracking-wider mb-1">By Severity</p>
-              <div className="flex gap-2 mt-1 flex-wrap">
-                {Object.entries(stats.by_severity || {}).map(([sev, count]) => (
-                  <span key={sev} className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${severityColors[sev] || 'bg-silver/10 text-silver'}`}>
-                    {sev}: {count}
-                  </span>
-                ))}
+            {Object.entries(stats.by_severity || {}).map(([sev, count]) => (
+              <div key={sev} className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-4">
+                <p className="text-xs text-silver-dim uppercase tracking-wider mb-1">{sev}</p>
+                <p className={`text-2xl font-bold ${sev === 'critical' ? 'text-red-400' : sev === 'high' ? 'text-orange-400' : sev === 'medium' ? 'text-yellow-400' : 'text-blue-400'}`} style={{ fontFamily: 'var(--font-display)' }}>{count}</p>
               </div>
-            </div>
+            ))}
           </div>
         )}
 

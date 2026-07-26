@@ -4,14 +4,16 @@ import { useFetch } from '../../lib/hooks'
 import type { Competition } from '../../lib/types'
 
 interface DashboardStats {
+  competition_id: number
+  competition_name: string
+  competition_status: string
   total_teams: number
   total_participants: number
-  active_competitions: number
-  violations: number
-  teams_ready: number
-  quiz_submissions: number
-  debug_submissions: number
-  pending_presentations: number
+  total_users: number
+  total_violations: number
+  total_points_awarded: number
+  registered_teams: number
+  active_teams: number
 }
 
 interface Announcement {
@@ -24,12 +26,10 @@ interface Announcement {
 const statCards = [
   { key: 'total_teams' as const, label: 'Total Teams', icon: '👥' },
   { key: 'total_participants' as const, label: 'Total Participants', icon: '🎯' },
-  { key: 'active_competitions' as const, label: 'Active Competitions', icon: '🏆' },
-  { key: 'violations' as const, label: 'Violations', icon: '⚠️' },
-  { key: 'teams_ready' as const, label: 'Teams Ready', icon: '✅' },
-  { key: 'quiz_submissions' as const, label: 'Quiz Submissions', icon: '📝' },
-  { key: 'debug_submissions' as const, label: 'Debug Submissions', icon: '🐛' },
-  { key: 'pending_presentations' as const, label: 'Pending Presentations', icon: '🎤' },
+  { key: 'total_violations' as const, label: 'Violations', icon: '⚠️' },
+  { key: 'active_teams' as const, label: 'Active Teams', icon: '✅' },
+  { key: 'total_points_awarded' as const, label: 'Points Awarded', icon: '🏆' },
+  { key: 'total_users' as const, label: 'Total Users', icon: '📊' },
 ]
 
 export default function AdminDashboardPage() {
@@ -75,25 +75,34 @@ export default function AdminDashboardPage() {
             <div className="animate-spin h-8 w-8 border-2 border-cyan/30 border-t-cyan rounded-full" />
           </div>
         ) : stats ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up">
-            {statCards.map((card) => (
-              <div
-                key={card.key}
-                className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-5"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl">{card.icon}</span>
-                  <span className="text-sm text-silver-dim">{card.label}</span>
-                </div>
-                <p
-                  className="text-3xl font-bold text-white"
-                  style={{ fontFamily: 'var(--font-display)' }}
-                >
-                  {stats[card.key] ?? 0}
-                </p>
+          <>
+            <div className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-5 flex items-center gap-4">
+              <span className="text-2xl">🏆</span>
+              <div>
+                <p className="text-sm text-silver-dim">{stats.competition_name}</p>
+                <p className="text-xs text-silver-dim/60 capitalize">{stats.competition_status}</p>
               </div>
-            ))}
-          </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in-up">
+              {statCards.map((card) => (
+                <div
+                  key={card.key}
+                  className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-5"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl">{card.icon}</span>
+                    <span className="text-sm text-silver-dim">{card.label}</span>
+                  </div>
+                  <p
+                    className="text-3xl font-bold text-white"
+                    style={{ fontFamily: 'var(--font-display)' }}
+                  >
+                    {stats[card.key] ?? 0}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
           <div className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-12 text-center">
             <span className="text-4xl block mb-3">📊</span>

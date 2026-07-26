@@ -31,9 +31,12 @@ interface QuizQuestion {
 
 interface LeaderboardEntry {
   team_id: number
-  team_name: string
-  score: number
+  team_name?: string
+  total_points: number
   rank: number
+  correct_answers: number
+  total_answers: number
+  average_time: number
 }
 
 interface RoundForm {
@@ -597,12 +600,12 @@ export default function AdminQuizPage() {
                         className="border-b border-midnight-lighter/20"
                       >
                         <td className="py-3 px-3 text-white font-medium">#{entry.rank}</td>
-                        <td className="py-3 px-3 text-silver">{entry.team_name}</td>
+                        <td className="py-3 px-3 text-silver">Team {entry.team_id}</td>
                         <td
                           className="py-3 px-3 text-right text-cyan font-bold"
                           style={{ fontFamily: 'var(--font-display)' }}
                         >
-                          {entry.score}
+                          {entry.total_points}
                         </td>
                       </tr>
                     ))}

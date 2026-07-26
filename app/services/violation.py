@@ -285,6 +285,33 @@ class ViolationService:
             "by_action": action_counts,
         }
 
+    async def list_competition_violations(
+        self, competition_id: int
+    ) -> list[dict[str, Any]]:
+        result = await self.db.execute(
+            select(Violation)
+            .where(Violation.competition_id == competition_id)
+            .order_by(Violation.created_at.desc())
+        )
+        violations = list(result.scalars().all())
+        return [
+            {
+                "id": v.id,
+                "user_id": v.user_id,
+                "team_id": v.team_id,
+                "competition_id": v.competition_id,
+                "violation_type": v.violation_type.value,
+                "severity": v.severity.value,
+                "action_taken": v.action_taken.value if v.action_taken else None,
+                "description": v.description,
+                "is_resolved": v.is_resolved,
+                "resolved_by": v.resolved_by,
+                "resolved_at": v.resolved_at.isoformat() if v.resolved_at else None,
+                "created_at": v.created_at.isoformat(),
+            }
+            for v in violations
+        ]
+
     async def get_violation_stats(
         self, competition_id: int
     ) -> dict[str, Any]:

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useFetch } from '../lib/hooks'
@@ -17,8 +17,8 @@ export default function DashboardPage() {
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin'
 
   const [competitionId, setCompetitionId] = useState<string>('')
-  const { data: competitionsRes, loading: compLoading } = useFetch<{ data: Competition[]; total: number } | Competition[]>('/competitions/')
-  const competitions: Competition[] = Array.isArray(competitionsRes) ? competitionsRes : competitionsRes?.data ?? []
+  const { data: competitionsData, loading: compLoading } = useFetch<Competition[]>('/competitions/')
+  const competitions = competitionsData ?? []
   const { data: adminStats } = useFetch<AdminDashboard>(
     isAdmin && competitionId ? `/admin/dashboard/${competitionId}` : null,
     [competitionId]
@@ -27,19 +27,21 @@ export default function DashboardPage() {
     !isAdmin && competitionId ? `/scores/leaderboard/${competitionId}` : null,
     [competitionId]
   )
-  const { data: announcementsRes } = useFetch<{ data: Announcement[] } | Announcement[]>(
+  const { data: announcementsData } = useFetch<Announcement[]>(
     competitionId ? `/admin/announcements/${competitionId}` : null,
     [competitionId]
   )
-  const announcements: Announcement[] = Array.isArray(announcementsRes) ? announcementsRes : announcementsRes?.data ?? []
+  const announcements = announcementsData ?? []
 
-  const activeCompetitions = competitions.filter((c) => c.status === 'active') ?? []
-  const allCompetitions = competitions ?? []
+  const activeCompetitions = competitions.filter((c) => c.status === 'active')
+  const allCompetitions = competitions
 
-  if (!isAdmin && !compLoading && allCompetitions.length > 0 && !competitionId) {
-    const active = activeCompetitions[0] || allCompetitions[0]
-    if (active) setCompetitionId(active.id.toString())
-  }
+  useEffect(() => {
+    if (!isAdmin && !compLoading && allCompetitions.length > 0 && !competitionId) {
+      const active = activeCompetitions[0] || allCompetitions[0]
+      if (active) setCompetitionId(active.id.toString())
+    }
+  }, [isAdmin, compLoading, allCompetitions, activeCompetitions, competitionId])
 
   const myRank = leaderboard?.entries?.[0]
 

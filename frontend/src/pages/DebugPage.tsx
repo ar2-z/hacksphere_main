@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Layout from '../components/Layout'
 import api from '../lib/api'
-import type { Competition, DebugChallenge, DebugTestCase, DebugSubmission, LeaderboardEntry } from '../lib/types'
+import type { Competition, DebugChallenge, DebugTestCase, DebugSubmission } from '../lib/types'
 import { useFetch } from '../lib/hooks'
 
 const difficultyColor: Record<string, string> = {
@@ -38,8 +38,28 @@ function EmptyState({ icon, title, desc }: { icon: string; title: string; desc: 
 }
 
 interface ChallengeDetails {
-  challenge: DebugChallenge
+  id: number
+  competition_id: number
+  name: string
+  description: string
+  difficulty: string
+  instructions: string
+  time_limit_seconds: number
+  memory_limit_mb: number
+  points: number
+  status: string
+  started_at: string | null
+  ended_at: string | null
+  created_at: string
+  test_case_count: number
+  buggy_code: string
   test_cases: DebugTestCase[]
+}
+
+interface DebugLeaderboardEntry {
+  rank: number
+  team_id: number
+  score: number
 }
 
 export default function DebugPage() {
@@ -157,12 +177,12 @@ function ChallengeInterface({ challengeId, onBack }: { challengeId: number; onBa
   const [code, setCode] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submission, setSubmission] = useState<DebugSubmission | null>(null)
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [leaderboard, setLeaderboard] = useState<DebugLeaderboardEntry[]>([])
 
   useEffect(() => {
     api.get(`/debugging/challenges/${challengeId}/details`).then((res) => {
       setDetails(res.data)
-      setCode(res.data.challenge.buggy_code)
+      setCode(res.data.buggy_code)
     }).catch(() => {}).finally(() => setLoading(false))
 
     api.get(`/debugging/challenges/${challengeId}/leaderboard`).then((res) => {
@@ -211,7 +231,7 @@ function ChallengeInterface({ challengeId, onBack }: { challengeId: number; onBa
     )
   }
 
-  const { challenge, test_cases } = details
+  const { test_cases, ...challenge } = details
 
   return (
     <div className="max-w-7xl mx-auto animate-fade-in-up">
@@ -372,8 +392,8 @@ function ChallengeInterface({ challengeId, onBack }: { challengeId: number; onBa
                         #{entry.rank}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-silver text-xs">{entry.team_name}</td>
-                    <td className="py-2.5 px-3 text-right text-xs font-medium text-cyan">{entry.total_score}</td>
+                    <td className="py-2.5 px-3 text-silver text-xs">Team {entry.team_id}</td>
+                    <td className="py-2.5 px-3 text-right text-xs font-medium text-cyan">{entry.score}</td>
                   </tr>
                 ))}
               </tbody>

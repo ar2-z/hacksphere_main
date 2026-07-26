@@ -623,7 +623,7 @@ export default function AdminDebugPage() {
                         className="border-b border-midnight-lighter/20"
                       >
                         <td className="py-3 px-3 text-white font-medium">#{entry.rank}</td>
-                        <td className="py-3 px-3 text-silver">{entry.team_name}</td>
+                        <td className="py-3 px-3 text-silver">Team {entry.team_id}</td>
                         <td
                           className="py-3 px-3 text-right text-cyan font-bold"
                           style={{ fontFamily: 'var(--font-display)' }}
