@@ -21,15 +21,25 @@ class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=convention)
 
 
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DATABASE_ECHO,
-    pool_pre_ping=True,
-    pool_size=settings.DATABASE_POOL_SIZE,
-    max_overflow=settings.DATABASE_MAX_OVERFLOW,
-    pool_recycle=300,
-    pool_timeout=30,
-)
+_is_postgres = settings.DATABASE_URL.startswith("postgresql")
+
+_engine_kwargs: dict = {
+    "echo": settings.DATABASE_ECHO,
+    "pool_pre_ping": True,
+}
+
+if _is_postgres:
+    import ssl as _ssl
+
+    _engine_kwargs["pool_size"] = settings.DATABASE_POOL_SIZE
+    _engine_kwargs["max_overflow"] = settings.DATABASE_MAX_OVERFLOW
+    _engine_kwargs["pool_recycle"] = 300
+    _engine_kwargs["pool_timeout"] = 30
+    _engine_kwargs["connect_args"] = {
+        "ssl": _ssl.create_default_context(),
+    }
+
+engine = create_async_engine(settings.DATABASE_URL, **_engine_kwargs)
 
 async_session_factory = async_sessionmaker(
     engine,
