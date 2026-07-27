@@ -2,7 +2,17 @@ import { useState } from 'react'
 import Layout from '../../components/Layout'
 import { useFetch } from '../../lib/hooks'
 import api from '../../lib/api'
-import type { Competition, PresentationScore } from '../../lib/types'
+import type { Competition } from '../../lib/types'
+
+interface PresentationScore {
+  id: string
+  presentation_id: string
+  category: string
+  score: number
+  max_score: number
+  feedback: string | null
+  created_at: string
+}
 
 interface PresentationQueueItem {
   presentation_id: number
@@ -261,7 +271,9 @@ export default function AdminIdeathonPage() {
           </div>
         ) : (
           <div className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-12 text-center">
-            <span className="text-4xl block mb-3">🎤</span>
+            <svg className="w-10 h-10 text-silver-dim/30 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
             <p className="text-silver-dim">No presentations in queue yet</p>
           </div>
         )}

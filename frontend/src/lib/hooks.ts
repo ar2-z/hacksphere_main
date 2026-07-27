@@ -67,11 +67,11 @@ export function useFetch<T>(
   return { data, loading, error, refetch: fetchData }
 }
 
-export function useSupabaseInsert<T>(table: string) {
+export function useSupabaseInsert(table: string) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const insert = async (row: Partial<T>) => {
+  const insert = async (row: Record<string, unknown>) => {
     setLoading(true)
     setError(null)
     const { data, error: err } = await supabase.from(table).insert(row).select().single()
@@ -80,22 +80,22 @@ export function useSupabaseInsert<T>(table: string) {
       setError(err.message)
       throw err
     }
-    return data as T
+    return data
   }
 
   return { insert, loading, error }
 }
 
-export function useSupabaseUpdate<T>(table: string) {
+export function useSupabaseUpdate(table: string) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const update = async (filters: Record<string, unknown>, updates: Partial<T>) => {
+  const update = async (filters: Record<string, unknown>, updates: Record<string, unknown>) => {
     setLoading(true)
     setError(null)
     let query = supabase.from(table).update(updates)
     for (const [key, value] of Object.entries(filters)) {
-      query = query.eq(key, value)
+      query = query.eq(key, value as string)
     }
     const { data, error: err } = await query.select()
     setLoading(false)

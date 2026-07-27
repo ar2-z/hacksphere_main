@@ -5,18 +5,25 @@ import api from '../../lib/api'
 import type { Competition, Violation } from '../../lib/types'
 
 interface ViolationStats {
-  competition_id: number
+  competition_id: string
   total_violations: number
   by_type: Record<string, number>
-  by_severity: Record<string, number>
+  by_severity: Record<number, number>
   by_action: Record<string, number>
 }
 
-const severityColors: Record<string, string> = {
-  low: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-  medium: 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20',
-  high: 'bg-orange-500/10 text-orange-400 border border-orange-500/20',
-  critical: 'bg-red-500/10 text-red-400 border border-red-500/20',
+const severityLabels: Record<number, string> = {
+  1: 'Low',
+  2: 'Medium',
+  3: 'High',
+  4: 'Critical',
+}
+
+const severityColors: Record<number, string> = {
+  1: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+  2: 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20',
+  3: 'bg-orange-500/10 text-orange-400 border border-orange-500/20',
+  4: 'bg-red-500/10 text-red-400 border border-red-500/20',
 }
 
 export default function AdminViolationsPage() {
@@ -30,7 +37,7 @@ export default function AdminViolationsPage() {
     competitionId ? `/violations/competition/${competitionId}` : null,
     [competitionId]
   )
-  const [actionModal, setActionModal] = useState<{ violationId: number; type: 'action' | 'resolve' } | null>(null)
+  const [actionModal, setActionModal] = useState<{ violationId: string; type: 'action' } | null>(null)
   const [actionForm, setActionForm] = useState({ action_taken: '', reason: '' })
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState('')
@@ -42,16 +49,11 @@ export default function AdminViolationsPage() {
     setError('')
     setSuccess('')
     try {
-      if (actionModal.type === 'action') {
-        await api.post(`/violations/${actionModal.violationId}/action`, {
-          action_taken: actionForm.action_taken,
-          reason: actionForm.reason || null,
-        })
-        setSuccess('Action recorded successfully')
-      } else {
-        await api.post(`/violations/${actionModal.violationId}/resolve`)
-        setSuccess('Violation resolved successfully')
-      }
+      await api.post(`/violations/${actionModal.violationId}/action`, {
+        action_taken: actionForm.action_taken,
+        reason: actionForm.reason || null,
+      })
+      setSuccess('Action recorded successfully')
       setActionModal(null)
       setActionForm({ action_taken: '', reason: '' })
       refetch()
@@ -99,12 +101,15 @@ export default function AdminViolationsPage() {
               <p className="text-xs text-silver-dim uppercase tracking-wider mb-1">Total</p>
               <p className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>{stats.total_violations}</p>
             </div>
-            {Object.entries(stats.by_severity || {}).map(([sev, count]) => (
-              <div key={sev} className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-4">
-                <p className="text-xs text-silver-dim uppercase tracking-wider mb-1">{sev}</p>
-                <p className={`text-2xl font-bold ${sev === 'critical' ? 'text-red-400' : sev === 'high' ? 'text-orange-400' : sev === 'medium' ? 'text-yellow-400' : 'text-blue-400'}`} style={{ fontFamily: 'var(--font-display)' }}>{count}</p>
-              </div>
-            ))}
+            {Object.entries(stats.by_severity || {}).map(([sev, count]) => {
+              const sevNum = parseInt(sev)
+              return (
+                <div key={sev} className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-4">
+                  <p className="text-xs text-silver-dim uppercase tracking-wider mb-1">{severityLabels[sevNum] || sev}</p>
+                  <p className={`text-2xl font-bold ${sevNum >= 4 ? 'text-red-400' : sevNum === 3 ? 'text-orange-400' : sevNum === 2 ? 'text-yellow-400' : 'text-blue-400'}`} style={{ fontFamily: 'var(--font-display)' }}>{count}</p>
+                </div>
+              )
+            })}
           </div>
         )}
 
@@ -136,7 +141,7 @@ export default function AdminViolationsPage() {
                     <th className="text-left px-5 py-3.5 text-silver-dim text-xs uppercase tracking-wider font-medium">Type</th>
                     <th className="text-left px-5 py-3.5 text-silver-dim text-xs uppercase tracking-wider font-medium">Severity</th>
                     <th className="text-left px-5 py-3.5 text-silver-dim text-xs uppercase tracking-wider font-medium">Description</th>
-                    <th className="text-left px-5 py-3.5 text-silver-dim text-xs uppercase tracking-wider font-medium">Status</th>
+                    <th className="text-left px-5 py-3.5 text-silver-dim text-xs uppercase tracking-wider font-medium">Action Taken</th>
                     <th className="text-left px-5 py-3.5 text-silver-dim text-xs uppercase tracking-wider font-medium">Date</th>
                     <th className="text-left px-5 py-3.5 text-silver-dim text-xs uppercase tracking-wider font-medium">Actions</th>
                   </tr>
@@ -144,54 +149,37 @@ export default function AdminViolationsPage() {
                 <tbody>
                   {violations.map((v) => (
                     <tr key={v.id} className="border-b border-midnight-lighter/20 hover:bg-midnight-light/20 transition-colors">
-                      <td className="px-5 py-4 text-silver">{v.user_id}</td>
+                      <td className="px-5 py-4 text-silver">{v.user_id || '---'}</td>
                       <td className="px-5 py-4">
                         <span className="text-silver capitalize">{v.violation_type.replace('_', ' ')}</span>
                       </td>
                       <td className="px-5 py-4">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${severityColors[v.severity] || severityColors.low}`}>
-                          {v.severity}
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${severityColors[v.severity] || severityColors[1]}`}>
+                          {severityLabels[v.severity] || v.severity}
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <span className="text-silver-dim text-xs max-w-xs block truncate">{v.description || '—'}</span>
+                        <span className="text-silver-dim text-xs max-w-xs block truncate">{v.description || '---'}</span>
                       </td>
                       <td className="px-5 py-4">
-                        {v.is_resolved ? (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            Resolved
+                        {v.action_taken ? (
+                          <span className="text-xs text-silver-dim max-w-[120px] block truncate" title={v.action_taken}>
+                            {v.action_taken}
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">
-                            Unresolved
-                          </span>
+                          <span className="text-xs text-silver-dim/50">---</span>
                         )}
                       </td>
                       <td className="px-5 py-4 text-silver-dim text-xs whitespace-nowrap">
                         {new Date(v.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-5 py-4">
-                        {!v.is_resolved && (
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => setActionModal({ violationId: v.id, type: 'action' })}
-                              className="bg-cyan/10 hover:bg-cyan/20 text-cyan border border-cyan/30 rounded-lg px-3 py-1.5 text-xs font-medium transition-all cursor-pointer"
-                            >
-                              Take Action
-                            </button>
-                            <button
-                              onClick={() => setActionModal({ violationId: v.id, type: 'resolve' })}
-                              className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg px-3 py-1.5 text-xs font-medium transition-all cursor-pointer"
-                            >
-                              Resolve
-                            </button>
-                          </div>
-                        )}
-                        {v.is_resolved && v.action_taken && (
-                          <span className="text-xs text-silver-dim max-w-[120px] block truncate" title={v.action_taken}>
-                            {v.action_taken}
-                          </span>
-                        )}
+                        <button
+                          onClick={() => setActionModal({ violationId: v.id, type: 'action' })}
+                          className="bg-cyan/10 hover:bg-cyan/20 text-cyan border border-cyan/30 rounded-lg px-3 py-1.5 text-xs font-medium transition-all cursor-pointer"
+                        >
+                          Take Action
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -201,7 +189,9 @@ export default function AdminViolationsPage() {
           </div>
         ) : (
           <div className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-12 text-center">
-            <span className="text-4xl block mb-3">✅</span>
+            <svg className="w-10 h-10 text-silver-dim/30 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
             <p className="text-silver-dim">No violations recorded for this competition</p>
           </div>
         )}
@@ -211,34 +201,30 @@ export default function AdminViolationsPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-midnight border border-midnight-lighter/40 rounded-2xl p-6 w-full max-w-md animate-fade-in-up">
             <h3 className="text-lg font-bold text-white mb-5" style={{ fontFamily: 'var(--font-display)' }}>
-              {actionModal.type === 'action' ? 'Take Action on Violation' : 'Resolve Violation'}
+              Take Action on Violation
             </h3>
 
-            {actionModal.type === 'action' ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-silver-dim mb-1.5 tracking-wider uppercase">Action Taken</label>
-                  <input
-                    type="text"
-                    value={actionForm.action_taken}
-                    onChange={(e) => setActionForm((f) => ({ ...f, action_taken: e.target.value }))}
-                    placeholder="e.g. Warning issued, Team disqualified"
-                    className="w-full bg-deep-black/60 border border-midnight-lighter/60 rounded-lg px-4 py-2.5 text-sm text-silver placeholder-silver-dim/50 focus:outline-none focus:border-cyan/30 input-glow"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-silver-dim mb-1.5 tracking-wider uppercase">Reason (Optional)</label>
-                  <textarea
-                    value={actionForm.reason}
-                    onChange={(e) => setActionForm((f) => ({ ...f, reason: e.target.value }))}
-                    placeholder="Explain why this action is being taken..."
-                    className="w-full bg-deep-black/60 border border-midnight-lighter/60 rounded-lg px-4 py-2.5 text-sm text-silver placeholder-silver-dim/50 focus:outline-none focus:border-cyan/30 input-glow resize-none min-h-[120px]"
-                  />
-                </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-silver-dim mb-1.5 tracking-wider uppercase">Action Taken</label>
+                <input
+                  type="text"
+                  value={actionForm.action_taken}
+                  onChange={(e) => setActionForm((f) => ({ ...f, action_taken: e.target.value }))}
+                  placeholder="e.g. Warning issued, Team disqualified"
+                  className="w-full bg-deep-black/60 border border-midnight-lighter/60 rounded-lg px-4 py-2.5 text-sm text-silver placeholder-silver-dim/50 focus:outline-none focus:border-cyan/30 input-glow"
+                />
               </div>
-            ) : (
-              <p className="text-sm text-silver-dim">Are you sure you want to mark this violation as resolved?</p>
-            )}
+              <div>
+                <label className="block text-xs font-medium text-silver-dim mb-1.5 tracking-wider uppercase">Reason (Optional)</label>
+                <textarea
+                  value={actionForm.reason}
+                  onChange={(e) => setActionForm((f) => ({ ...f, reason: e.target.value }))}
+                  placeholder="Explain why this action is being taken..."
+                  className="w-full bg-deep-black/60 border border-midnight-lighter/60 rounded-lg px-4 py-2.5 text-sm text-silver placeholder-silver-dim/50 focus:outline-none focus:border-cyan/30 input-glow resize-none min-h-[120px]"
+                />
+              </div>
+            </div>
 
             <div className="flex justify-end gap-3 mt-6">
               <button
@@ -249,10 +235,10 @@ export default function AdminViolationsPage() {
               </button>
               <button
                 onClick={handleAction}
-                disabled={actionLoading || (actionModal.type === 'action' && !actionForm.action_taken)}
+                disabled={actionLoading || !actionForm.action_taken}
                 className="bg-cyan/10 hover:bg-cyan/20 text-cyan border border-cyan/30 rounded-lg px-4 py-2 text-sm font-medium transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {actionLoading ? 'Processing...' : actionModal.type === 'action' ? 'Submit Action' : 'Confirm Resolve'}
+                {actionLoading ? 'Processing...' : 'Submit Action'}
               </button>
             </div>
           </div>

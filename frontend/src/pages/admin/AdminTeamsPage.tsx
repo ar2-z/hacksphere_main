@@ -10,9 +10,9 @@ export default function AdminTeamsPage() {
     competitionId ? `/teams/competition/${competitionId}` : null,
     [competitionId]
   )
-  const [expandedTeam, setExpandedTeam] = useState<number | null>(null)
+  const [expandedTeam, setExpandedTeam] = useState<string | null>(null)
 
-  const toggleExpand = (teamId: number) => {
+  const toggleExpand = (teamId: string) => {
     setExpandedTeam((prev) => (prev === teamId ? null : teamId))
   }
 
@@ -67,9 +67,9 @@ export default function AdminTeamsPage() {
                 <thead>
                   <tr className="border-b border-midnight-lighter/30">
                     <th className="text-left px-5 py-3.5 text-silver-dim text-xs uppercase tracking-wider font-medium">Team</th>
-                    <th className="text-left px-5 py-3.5 text-silver-dim text-xs uppercase tracking-wider font-medium">Code</th>
+                    <th className="text-left px-5 py-3.5 text-silver-dim text-xs uppercase tracking-wider font-medium">Invite Code</th>
                     <th className="text-left px-5 py-3.5 text-silver-dim text-xs uppercase tracking-wider font-medium">Members</th>
-                    <th className="text-left px-5 py-3.5 text-silver-dim text-xs uppercase tracking-wider font-medium">Ready</th>
+                    <th className="text-left px-5 py-3.5 text-silver-dim text-xs uppercase tracking-wider font-medium">Status</th>
                     <th className="text-left px-5 py-3.5 text-silver-dim text-xs uppercase tracking-wider font-medium">Created</th>
                     <th className="px-5 py-3.5 w-10"></th>
                   </tr>
@@ -87,22 +87,22 @@ export default function AdminTeamsPage() {
                         </td>
                         <td className="px-5 py-4">
                           <span className="font-mono text-xs text-cyan bg-cyan/10 px-2 py-0.5 rounded border border-cyan/20">
-                            {team.team_code}
+                            {team.invite_code}
                           </span>
                         </td>
                         <td className="px-5 py-4">
                           <span className="text-silver">
-                            {team.member_count} / {team.max_members}
+                            {team.member_count ?? team.members?.length ?? 0}
                           </span>
                         </td>
                         <td className="px-5 py-4">
-                          {team.is_ready ? (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                              Ready
+                          {team.is_eliminated ? (
+                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20">
+                              Eliminated
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-silver/10 text-silver-dim border border-silver/10">
-                              Not Ready
+                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              Active
                             </span>
                           )}
                         </td>
@@ -136,15 +136,15 @@ export default function AdminTeamsPage() {
                                     >
                                       <div className="w-8 h-8 bg-midnight-light/60 border border-midnight-lighter/60 rounded-full flex items-center justify-center shrink-0">
                                         <span className="text-xs font-medium text-cyan/70">
-                                          {member.user_name?.charAt(0)?.toUpperCase() || '?'}
+                                          {member.user?.full_name?.charAt(0)?.toUpperCase() || '?'}
                                         </span>
                                       </div>
                                       <div className="min-w-0">
-                                        <p className="text-sm text-white font-medium truncate">{member.user_name}</p>
-                                        <p className="text-xs text-silver-dim truncate">{member.user_email}</p>
+                                        <p className="text-sm text-white font-medium truncate">{member.user?.full_name || 'Unknown'}</p>
+                                        <p className="text-xs text-silver-dim truncate">{member.user?.email || member.user_id}</p>
                                       </div>
                                       <span className="ml-auto text-[10px] text-silver-dim uppercase tracking-wider shrink-0">
-                                        {member.role}
+                                        {member.user_id === team.leader_id ? 'Leader' : 'Member'}
                                       </span>
                                     </div>
                                   ))}
@@ -164,7 +164,9 @@ export default function AdminTeamsPage() {
           </div>
         ) : (
           <div className="bg-midnight/40 border border-midnight-lighter/40 rounded-xl p-12 text-center">
-            <span className="text-4xl block mb-3">👥</span>
+            <svg className="w-10 h-10 text-silver-dim/30 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
             <p className="text-silver-dim">No teams registered for this competition yet</p>
           </div>
         )}
