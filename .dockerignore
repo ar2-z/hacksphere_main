@@ -3,7 +3,7 @@
 .gitignore
 .env
 .env.*
-!.env.example
+!.env.production.example
 *.db
 __pycache__
 *.pyc
@@ -26,3 +26,6 @@ scripts/deploy.sh
 uploads
 *.md
 !README.md
+render.yaml
+hacksphere_v2.db
+hacksphere.db

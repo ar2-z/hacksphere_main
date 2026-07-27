@@ -33,15 +33,18 @@ _engine_kwargs: dict = {
 }
 
 if _is_postgres:
-    import ssl as _ssl
-
     _engine_kwargs["pool_size"] = settings.DATABASE_POOL_SIZE
     _engine_kwargs["max_overflow"] = settings.DATABASE_MAX_OVERFLOW
     _engine_kwargs["pool_recycle"] = 300
     _engine_kwargs["pool_timeout"] = 30
-    _engine_kwargs["connect_args"] = {
-        "ssl": _ssl.create_default_context(),
-    }
+
+    import ssl as _ssl
+
+    _connect_args: dict = {}
+    _needs_ssl = any(h in _db_url for h in ("render.com", "amazonaws.com", "azure.com", "googleapis.com"))
+    if _needs_ssl:
+        _connect_args["ssl"] = _ssl.create_default_context()
+    _engine_kwargs["connect_args"] = _connect_args
 
 engine = create_async_engine(_db_url, **_engine_kwargs)
 

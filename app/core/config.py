@@ -35,8 +35,8 @@ class Settings(BaseSettings):
 
     # Database (PostgreSQL primary, SQLite fallback for local dev)
     DATABASE_URL: str = "postgresql+asyncpg://hacksphere:hacksphere@localhost:5432/hacksphere"
-    DATABASE_POOL_SIZE: int = 20
-    DATABASE_MAX_OVERFLOW: int = 10
+    DATABASE_POOL_SIZE: int = 30
+    DATABASE_MAX_OVERFLOW: int = 20
     DATABASE_ECHO: bool = False
 
     # Redis

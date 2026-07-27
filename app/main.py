@@ -46,6 +46,10 @@ def _get_cors_origins() -> list[str]:
     return origins
 
 
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+_SPA_PREFIXES = ("/api/", "/health", "/ws/", "/docs", "/redoc", "/openapi.json")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Starting HackSphere", env=settings.APP_ENV, host=settings.HOST, port=settings.PORT)
@@ -127,17 +131,20 @@ app.include_router(leaderboard_ws_router)
 app.include_router(anticheat_ws_router)
 app.include_router(admin_ws_router)
 
-FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
-
 if FRONTEND_DIR.exists():
     app.mount("/assets", StaticFiles(directory=str(FRONTEND_DIR / "assets")), name="static-assets")
 
-    @app.get("/{full_path:path}")
-    async def serve_spa(full_path: str) -> FileResponse:
-        file_path = FRONTEND_DIR / full_path
-        if file_path.is_file():
-            return FileResponse(str(file_path))
-        return FileResponse(str(FRONTEND_DIR / "index.html"))
+    @app.middleware("http")
+    async def spa_fallback(request: Request, call_next: Any) -> Any:
+        response = await call_next(request)
+        if request.method == "GET" and response.status_code in (404, 405):
+            path = request.url.path
+            if not any(path.startswith(p) for p in _SPA_PREFIXES):
+                file_path = FRONTEND_DIR / path.lstrip("/")
+                if file_path.is_file():
+                    return FileResponse(str(file_path))
+                return FileResponse(str(FRONTEND_DIR / "index.html"))
+        return response
 else:
     @app.get("/")
     async def root() -> dict[str, str]:
