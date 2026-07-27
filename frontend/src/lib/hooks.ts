@@ -1,22 +1,55 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import api from './api'
+import { supabase } from './supabase'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
-export function useFetch<T>(url: string | null, deps: unknown[] = []) {
+export function useFetch<T>(
+  table: string,
+  options?: {
+    columns?: string
+    filters?: Record<string, unknown>
+    order?: { column: string; ascending?: boolean }
+    limit?: number
+    single?: boolean
+  },
+  deps: unknown[] = []
+) {
   const [data, setData] = useState<T | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
-    if (!url) { setLoading(false); return }
     try {
       setLoading(true)
       setError(null)
-      const res = await api.get(url)
-      const body = res.data
-      if (body && typeof body === 'object' && Array.isArray(body.data) && 'total' in body) {
-        setData(body.data as T)
+
+      let query = supabase.from(table).select(options?.columns || '*')
+
+      if (options?.filters) {
+        for (const [key, value] of Object.entries(options.filters)) {
+          if (value !== undefined && value !== null) {
+            query = query.eq(key, value)
+          }
+        }
+      }
+
+      if (options?.order) {
+        query = query.order(options.order.column, {
+          ascending: options.order.ascending ?? false,
+        })
+      }
+
+      if (options?.limit) {
+        query = query.limit(options.limit)
+      }
+
+      if (options?.single) {
+        const { data: result, error: err } = await query.single()
+        if (err) throw err
+        setData(result as T)
       } else {
-        setData(body as T)
+        const { data: result, error: err } = await query
+        if (err) throw err
+        setData(result as T)
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Request failed'
@@ -25,10 +58,99 @@ export function useFetch<T>(url: string | null, deps: unknown[] = []) {
       setLoading(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, ...deps])
+  }, [table, JSON.stringify(options), ...deps])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
   return { data, loading, error, refetch: fetchData }
+}
+
+export function useSupabaseInsert<T>(table: string) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const insert = async (row: Partial<T>) => {
+    setLoading(true)
+    setError(null)
+    const { data, error: err } = await supabase.from(table).insert(row).select().single()
+    setLoading(false)
+    if (err) {
+      setError(err.message)
+      throw err
+    }
+    return data as T
+  }
+
+  return { insert, loading, error }
+}
+
+export function useSupabaseUpdate<T>(table: string) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const update = async (filters: Record<string, unknown>, updates: Partial<T>) => {
+    setLoading(true)
+    setError(null)
+    let query = supabase.from(table).update(updates)
+    for (const [key, value] of Object.entries(filters)) {
+      query = query.eq(key, value)
+    }
+    const { data, error: err } = await query.select()
+    setLoading(false)
+    if (err) {
+      setError(err.message)
+      throw err
+    }
+    return data
+  }
+
+  return { update, loading, error }
+}
+
+export function useRealtime<T>(
+  table: string,
+  options?: {
+    filter?: string
+    event?: 'INSERT' | 'UPDATE' | 'DELETE' | '*'
+  },
+  onData?: (data: T) => void
+) {
+  const [data, setData] = useState<T | null>(null)
+  const [connected, setConnected] = useState(false)
+  const channelRef = useRef<RealtimeChannel | null>(null)
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`${table}-realtime`)
+      .on(
+        'postgres_changes',
+        {
+          event: options?.event || '*',
+          schema: 'public',
+          table,
+          filter: options?.filter,
+        },
+        (payload) => {
+          const newData = payload.new as T
+          setData(newData)
+          onData?.(newData)
+        }
+      )
+      .subscribe((status) => {
+        setConnected(status === 'SUBSCRIBED')
+      })
+
+    channelRef.current = channel
+
+    return () => {
+      channel.unsubscribe()
+      channelRef.current = null
+    }
+  }, [table])
+
+  return { data, connected }
 }
 
 export function useWebSocket(url: string | null, onMessage?: (data: Record<string, unknown>) => void) {
@@ -52,7 +174,10 @@ export function useWebSocket(url: string | null, onMessage?: (data: Record<strin
       } catch {}
     }
 
-    return () => { ws.close(); wsRef.current = null }
+    return () => {
+      ws.close()
+      wsRef.current = null
+    }
   }, [url])
 
   const send = useCallback((data: Record<string, unknown>) => {

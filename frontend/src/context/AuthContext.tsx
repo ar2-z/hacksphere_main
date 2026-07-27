@@ -1,81 +1,97 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-import api from '../lib/api'
-
-interface User {
-  id: number
-  email: string
-  username: string
-  full_name: string
-  role: string
-  is_active: boolean
-}
+import { supabase } from '../lib/supabase'
+import type { User } from '../lib/types'
+import type { Session } from '@supabase/supabase-js'
 
 interface AuthContextType {
   user: User | null
+  session: Session | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   register: (data: {
     email: string
-    username: string
     full_name: string
     password: string
   }) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
   isAuthenticated: boolean
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
+async function fetchUserProfile(userId: string): Promise<User | null> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', userId)
+    .single()
+  if (error || !data) return null
+  return data as User
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token')
-    if (token) {
-      api
-        .get('/auth/me')
-        .then((res) => setUser(res.data))
-        .catch(() => {
-          localStorage.removeItem('access_token')
-          localStorage.removeItem('refresh_token')
-        })
-        .finally(() => setLoading(false))
-    } else {
-      setLoading(false)
-    }
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s)
+      if (s?.user) {
+        fetchUserProfile(s.user.id).then(setUser).finally(() => setLoading(false))
+      } else {
+        setLoading(false)
+      }
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, s) => {
+        setSession(s)
+        if (s?.user) {
+          const profile = await fetchUserProfile(s.user.id)
+          setUser(profile)
+        } else {
+          setUser(null)
+        }
+      }
+    )
+
+    return () => subscription.unsubscribe()
   }, [])
 
   const login = async (email: string, password: string) => {
-    const res = await api.post('/auth/login', { email, password })
-    localStorage.setItem('access_token', res.data.access_token)
-    localStorage.setItem('refresh_token', res.data.refresh_token)
-    if (res.data.user) {
-      setUser(res.data.user)
-    } else {
-      const me = await api.get('/auth/me')
-      setUser(me.data)
-    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) throw error
   }
 
-  const register = async (data: {
-    email: string
-    username: string
-    full_name: string
-    password: string
-  }) => {
-    await api.post('/auth/register', data)
+  const register = async (data: { email: string; full_name: string; password: string }) => {
+    const { error: authError } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: { full_name: data.full_name },
+      },
+    })
+    if (authError) throw authError
   }
 
-  const logout = () => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
+  const logout = async () => {
+    await supabase.auth.signOut()
     setUser(null)
+    setSession(null)
   }
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, logout, isAuthenticated: !!user }}
+      value={{
+        user,
+        session,
+        loading,
+        login,
+        register,
+        logout,
+        isAuthenticated: !!user,
+      }}
     >
       {children}
     </AuthContext.Provider>
