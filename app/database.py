@@ -30,11 +30,19 @@ def init_db():
         db.execute(text("SELECT current_phase FROM competitions LIMIT 1"))
         db.close()
     except Exception:
-        with engine.connect() as conn:
-            conn.execute(text("DROP SCHEMA public CASCADE"))
-            conn.execute(text("CREATE SCHEMA public"))
-            conn.commit()
-        models.Base.metadata.create_all(bind=engine)
+        is_sqlite = "sqlite" in settings.database_url
+        if is_sqlite:
+            import os
+            db_path = settings.database_url.replace("sqlite:///", "")
+            if os.path.exists(db_path):
+                os.remove(db_path)
+            models.Base.metadata.create_all(bind=engine)
+        else:
+            with engine.connect() as conn:
+                conn.execute(text("DROP SCHEMA public CASCADE"))
+                conn.execute(text("CREATE SCHEMA public"))
+                conn.commit()
+            models.Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
         competition = db.query(models.Competition).first()
