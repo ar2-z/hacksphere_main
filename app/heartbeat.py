@@ -89,6 +89,7 @@ def list_participants(db: Session = Depends(get_db)):
             "username": user.username,
             "full_name": user.full_name,
             "email": user.email,
+            "is_active": user.is_active,
             "team_name": team.name if team else None,
             "status": status,
             "last_active": user.last_seen,

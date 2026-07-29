@@ -646,20 +646,22 @@ function initAdminDashboard() {
       if (!data) return;
       const participants = Array.isArray(data) ? data : (data.participants || []);
       const tbody = document.getElementById('participants-table-body');
-      tbody.innerHTML = participants.map(p => `
-        <tr>
+      tbody.innerHTML = participants.map(p => {
+        const inactive = p.is_active === false;
+        return `<tr class="${inactive ? 'row-inactive' : ''}">
           <td>${p.team_name || p.username || '--'}</td>
-          <td class="status-${p.status?.toLowerCase() || 'active'}">${p.status || 'Active'}</td>
+          <td class="status-${p.status?.toLowerCase() || 'active'}">${inactive ? 'Kicked' : (p.status || 'Active')}</td>
           <td>${p.last_active ? new Date(p.last_active).toLocaleTimeString() : '--'}</td>
           <td>${p.current_phase || '--'}</td>
           <td>${p.score ?? 0}</td>
           <td>
+            ${inactive ? '<span class="text-muted">--</span>' : `
             <button class="btn btn-sm btn-warning" onclick="adminAction(${p.id},'warn')">Warn</button>
             <button class="btn btn-sm btn-danger" onclick="adminAction(${p.id},'kick')">Kick</button>
-            <button class="btn btn-sm btn-danger" onclick="adminAction(${p.id},'disqualify')">DQ</button>
+            <button class="btn btn-sm btn-danger" onclick="adminAction(${p.id},'disqualify')">DQ</button>`}
           </td>
-        </tr>
-      `).join('');
+        </tr>`;
+      }).join('');
     } catch (e) {}
   }
 
@@ -960,18 +962,20 @@ function initAdminMembers() {
         if (s === 'active') active++;
         else if (s === 'idle') idle++;
         else left++;
-        return `<tr>
+        const disabled = p.role === 'admin' || p.is_active === false;
+        return `<tr class="${p.is_active === false ? 'row-inactive' : ''}">
           <td>${p.username || '--'}</td>
           <td>${p.full_name || '--'}</td>
           <td>${p.email || '--'}</td>
           <td><span class="badge badge-${p.role === 'admin' ? 'danger' : 'info'}">${p.role || 'member'}</span></td>
           <td>${p.team_name || '<em>No team</em>'}</td>
-          <td class="status-${s}">${p.status || 'Left'}</td>
+          <td class="status-${s}">${p.is_active === false ? 'Kicked' : (p.status || 'Left')}</td>
           <td>${p.last_active ? new Date(p.last_active).toLocaleString() : '--'}</td>
           <td>
+            ${disabled ? '<span class="text-muted">--</span>' : `
             <button class="btn btn-sm btn-warning" onclick="adminAction(${p.id},'warn')">Warn</button>
             <button class="btn btn-sm btn-danger" onclick="adminAction(${p.id},'kick')">Kick</button>
-            <button class="btn btn-sm btn-danger" onclick="adminAction(${p.id},'disqualify')">DQ</button>
+            <button class="btn btn-sm btn-danger" onclick="adminAction(${p.id},'disqualify')">DQ</button>`}
           </td>
         </tr>`;
       }).join('');
@@ -982,6 +986,20 @@ function initAdminMembers() {
       document.getElementById('stat-left').textContent = left;
     } catch (e) {}
   }
+  async function doMemberAction(id, action) {
+    if (!confirm(`Are you sure you want to ${action} this user?`)) return;
+    try {
+      const data = await fetchApi(`/admin/participants/${id}/${action}`, { method: 'POST' });
+      if (data) {
+        showAlert(`User ${action} successful`, 'success');
+        loadMembers();
+      }
+    } catch (err) {
+      showAlert(err.message, 'error');
+    }
+  }
+  window.doMemberAction = doMemberAction;
+  window._refreshMembers = loadMembers;
   loadMembers();
   setInterval(loadMembers, 5000);
 }
@@ -1057,7 +1075,10 @@ async function adminAction(id, action, type = 'participant') {
   try {
     const endpoint = type === 'team' ? `/admin/teams/${id}/${action}` : `/admin/participants/${id}/${action}`;
     const data = await fetchApi(endpoint, { method: 'POST' });
-    if (data) showAlert(`${action} successful`, 'success');
+    if (data) {
+      showAlert(`${action} successful`, 'success');
+      if (window._refreshMembers) window._refreshMembers();
+    }
   } catch (err) {
     showAlert(err.message, 'error');
   }

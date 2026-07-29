@@ -399,6 +399,9 @@ option { background: var(--card-bg); color: var(--text); }
 .rank-3 { background: linear-gradient(90deg, rgba(205,127,50,.1), transparent) !important; }
 .rank-3 td:first-child { color: var(--bronze); }
 .current-user-row { border-left: 3px solid var(--accent) !important; }
+.row-inactive { opacity: .45; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(239,68,68,.03) 10px, rgba(239,68,68,.03) 20px) !important; }
+.row-inactive td { text-decoration: line-through; }
+.row-inactive .btn { pointer-events: none; opacity: .3; }
 
 .loading-state { text-align: center; padding: 3rem; font-size: 1.1rem; color: var(--muted); }
 
