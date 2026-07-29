@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}HackSphere - Admin Quiz{% endblock %}
+{% block content %}
+<nav class="navbar">
+  <div class="nav-left">
+    <span class="nav-logo">⚡ HackSphere Admin</span>
+  </div>
+  <div class="nav-right">
+    <span id="user-name" class="nav-user"></span>
+    <button id="logout-btn" class="btn btn-sm btn-danger">Logout</button>
+  </div>
+</nav>
+<div class="admin-layout">
+  <nav class="admin-tabs">
+    <a href="/admin/dashboard" class="admin-tab">Dashboard</a>
+    <a href="/admin/teams" class="admin-tab">Teams</a>
+    <a href="/admin/quiz" class="admin-tab active">Quiz</a>
+    <a href="/admin/debug" class="admin-tab">Debug</a>
+    <a href="/admin/ideathon" class="admin-tab">Ideathon</a>
+    <a href="/admin/violations" class="admin-tab">Violations</a>
+    <a href="/admin/announcements" class="admin-tab">Announcements</a>
+  </nav>
+  <main class="admin-content">
+    <section class="round-controls">
+      <h2>Round Controls</h2>
+      <div id="round-controls" class="round-buttons"></div>
+    </section>
+    <section class="add-question-section">
+      <h2>Add Question</h2>
+      <form id="add-question-form" class="admin-form">
+        <div class="form-group">
+          <label for="q-text">Question Text</label>
+          <textarea id="q-text" class="form-input" rows="3" required></textarea>
+        </div>
+        <div class="options-group">
+          <div class="form-group">
+            <label><input type="radio" name="correct" value="A" checked> Option A</label>
+            <input type="text" id="q-opt-a" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label><input type="radio" name="correct" value="B"> Option B</label>
+            <input type="text" id="q-opt-b" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label><input type="radio" name="correct" value="C"> Option C</label>
+            <input type="text" id="q-opt-c" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label><input type="radio" name="correct" value="D"> Option D</label>
+            <input type="text" id="q-opt-d" class="form-input" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="q-difficulty">Difficulty</label>
+            <select id="q-difficulty" class="form-input">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="q-points">Points</label>
+            <input type="number" id="q-points" class="form-input" value="10" min="1" required>
+          </div>
+          <div class="form-group">
+            <label for="q-time">Time Limit (seconds)</label>
+            <input type="number" id="q-time" class="form-input" value="30" min="5" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Question</button>
+      </form>
+    </section>
+    <section class="questions-list-section">
+      <h2>Existing Questions</h2>
+      <div id="questions-list" class="questions-list"></div>
+    </section>
+    <section class="quiz-scores-section">
+      <h2>Score Overview</h2>
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Team</th>
+              <th>Correct</th>
+              <th>Incorrect</th>
+              <th>Total Score</th>
+            </tr>
+          </thead>
+          <tbody id="quiz-scores-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+{% endblock %}

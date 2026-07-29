@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}HackSphere - Quiz{% endblock %}
+{% block content %}
+<nav class="navbar">
+  <div class="nav-left">
+    <span class="nav-logo">⚡ HackSphere</span>
+    <a href="/dashboard" class="nav-link">Dashboard</a>
+  </div>
+  <div class="nav-right">
+    <span id="user-name" class="nav-user"></span>
+    <button id="logout-btn" class="btn btn-sm btn-danger">Logout</button>
+  </div>
+</nav>
+<main class="container">
+  <div id="quiz-loading" class="loading-state">Loading quiz...</div>
+  <div id="quiz-waiting" class="quiz-state hidden">
+    <div class="glass-card text-center">
+      <h2>Quiz not yet started</h2>
+      <p>Waiting for the admin to start the quiz round.</p>
+    </div>
+  </div>
+  <div id="quiz-active" class="quiz-state hidden">
+    <div class="quiz-header">
+      <div class="glass-card round-info">
+        <span class="round-label">Round</span>
+        <span id="round-number" class="round-value">1</span>
+      </div>
+      <div class="glass-card timer-card">
+        <span class="timer-label">Time Left</span>
+        <span id="quiz-timer" class="timer-value">00:00</span>
+      </div>
+    </div>
+    <div class="glass-card question-card">
+      <div class="question-counter">
+        Question <span id="question-current">1</span> of <span id="question-total">10</span>
+      </div>
+      <h3 id="question-text" class="question-text"></h3>
+      <div id="options-container" class="options-grid">
+        <button class="option-btn" data-option="A">A: <span class="option-text"></span></button>
+        <button class="option-btn" data-option="B">B: <span class="option-text"></span></button>
+        <button class="option-btn" data-option="C">C: <span class="option-text"></span></button>
+        <button class="option-btn" data-option="D">D: <span class="option-text"></span></button>
+      </div>
+    </div>
+  </div>
+  <div id="quiz-results" class="quiz-state hidden">
+    <div class="glass-card results-card">
+      <h2>Quiz Complete!</h2>
+      <div class="score-breakdown">
+        <div class="score-item correct">
+          <span class="score-label">Correct</span>
+          <span id="results-correct" class="score-count">0</span>
+        </div>
+        <div class="score-item incorrect">
+          <span class="score-label">Incorrect</span>
+          <span id="results-incorrect" class="score-count">0</span>
+        </div>
+        <div class="score-item unanswered">
+          <span class="score-label">Unanswered</span>
+          <span id="results-unanswered" class="score-count">0</span>
+        </div>
+        <div class="score-item total">
+          <span class="score-label">Total Score</span>
+          <span id="results-score" class="score-count">0</span>
+        </div>
+      </div>
+      <div id="clue-display" class="clue-display hidden">
+        <h3>Clue Unlocked</h3>
+        <p id="clue-text" class="clue-text"></p>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}HackSphere - Leaderboard{% endblock %}
+{% block content %}
+<nav class="navbar">
+  <div class="nav-left">
+    <span class="nav-logo">⚡ HackSphere</span>
+    <a href="/dashboard" class="nav-link">Dashboard</a>
+  </div>
+  <div class="nav-right">
+    <span id="user-name" class="nav-user"></span>
+    <button id="logout-btn" class="btn btn-sm btn-danger">Logout</button>
+  </div>
+</nav>
+<main class="container">
+  <div class="leaderboard-header">
+    <h1 class="leaderboard-title">🏆 Leaderboard</h1>
+    <div class="live-indicator">
+      <span class="live-dot"></span>
+      <span class="live-text">Live</span>
+    </div>
+  </div>
+  <div class="table-wrapper">
+    <table class="table leaderboard-table" id="leaderboard-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Team Name</th>
+          <th>Quiz</th>
+          <th>Debug</th>
+          <th>Ideathon</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboard-body"></tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}

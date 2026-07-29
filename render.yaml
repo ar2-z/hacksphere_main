@@ -1,39 +1,19 @@
 services:
   - type: web
     name: hacksphere
-    runtime: docker
-    dockerfilePath: ./Dockerfile
-    plan: free
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: APP_ENV
-        value: production
       - key: SECRET_KEY
         generateValue: true
-      - key: JWT_SECRET_KEY
-        generateValue: true
-      - key: DATABASE_URL
-        fromDatabase:
-          name: hacksphere-db
-          property: connectionString
-      - key: REDIS_URL
-        value: memory://
-      - key: CELERY_BROKER_URL
-        value: memory://
-      - key: CELERY_RESULT_BACKEND
-        value: memory://
-      - key: HOST
-        value: 0.0.0.0
-      - key: PORT
-        value: 8000
-      - key: DEBUG
-        value: "false"
-      - key: ALLOWED_HOSTS
-        value: '["*"]'
-      - key: CORS_ORIGINS
-        value: '["*"]'
+      - key: JUDGE0_URL
+        value: https://judge0-ce.p.rapidapi.com
+      - key: JUDGE0_API_KEY
+        sync: false
 
-  - type: pserv
-    name: hacksphere-db
+databases:
+  - name: hacksphere-db
+    databaseName: hacksphere
+    user: hacksphere
     plan: free
-    database: postgres
-    ipAllowList: []

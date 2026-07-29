@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}HackSphere - Ideathon{% endblock %}
+{% block content %}
+<nav class="navbar">
+  <div class="nav-left">
+    <span class="nav-logo">⚡ HackSphere</span>
+    <a href="/dashboard" class="nav-link">Dashboard</a>
+  </div>
+  <div class="nav-right">
+    <span id="user-name" class="nav-user"></span>
+    <button id="logout-btn" class="btn btn-sm btn-danger">Logout</button>
+  </div>
+</nav>
+<main class="container">
+  <div id="ideathon-loading" class="loading-state">Loading ideathon...</div>
+  <div id="ideathon-waiting" class="ideathon-state hidden">
+    <div class="glass-card text-center">
+      <h2>Ideathon not yet started</h2>
+      <p>Waiting for the admin to start the ideathon phase.</p>
+    </div>
+  </div>
+  <div id="ideathon-active" class="ideathon-state hidden">
+    <div class="glass-card mb-xl">
+      <h2>Problem Statement</h2>
+      <div id="problem-statement" class="problem-statement"></div>
+    </div>
+    <div id="ideathon-submission" class="glass-card">
+      <h2>Your Submission</h2>
+      <div class="form-group">
+        <label for="idea-summary">Idea Summary</label>
+        <textarea id="idea-summary" class="form-input" rows="6" placeholder="Describe your idea in detail..."></textarea>
+      </div>
+      <div class="form-group">
+        <label for="idea-file">Upload Presentation (PDF only, max 20MB)</label>
+        <input type="file" id="idea-file" class="form-input" accept=".pdf">
+      </div>
+      <div class="ideathon-controls">
+        <button id="submit-idea" class="btn btn-primary">Submit Idea</button>
+        <button id="ready-idea" class="btn btn-success">Ready for Presentation</button>
+      </div>
+    </div>
+    <div id="ideathon-locked" class="glass-card locked-state hidden">
+      <div class="lock-icon">🔒</div>
+      <h2>Submission Locked</h2>
+      <p>Your idea has been submitted. You are ready for presentation.</p>
+      <p>Your presentation slot: <span id="presentation-slot" class="slot-number">--</span></p>
+    </div>
+    <div class="glass-card mt-xl">
+      <h2>Presentation Order</h2>
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Slot</th>
+              <th>Team Name</th>
+            </tr>
+          </thead>
+          <tbody id="presentation-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}

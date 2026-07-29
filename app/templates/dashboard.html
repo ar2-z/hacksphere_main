@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}HackSphere - Dashboard{% endblock %}
+{% block content %}
+<nav class="navbar">
+  <div class="nav-left">
+    <span class="nav-logo">⚡ HackSphere</span>
+  </div>
+  <div class="nav-right">
+    <span id="user-name" class="nav-user"></span>
+    <span id="user-role" class="badge"></span>
+    <button id="logout-btn" class="btn btn-sm btn-danger">Logout</button>
+  </div>
+</nav>
+<main class="container">
+  <section class="welcome-section">
+    <h1 class="welcome-title">Welcome back, <span id="user-fullname"></span>!</h1>
+    <p id="competition-info" class="competition-info"></p>
+  </section>
+  <section class="stats-grid">
+    <div class="glass-card stat-card">
+      <div class="stat-label">Current Phase</div>
+      <div id="stat-phase" class="stat-value">--</div>
+    </div>
+    <div class="glass-card stat-card">
+      <div class="stat-label">My Team</div>
+      <div id="stat-team" class="stat-value">--</div>
+    </div>
+    <div class="glass-card stat-card">
+      <div class="stat-label">My Score</div>
+      <div id="stat-score" class="stat-value">0</div>
+    </div>
+    <div class="glass-card stat-card">
+      <div class="stat-label">Rank</div>
+      <div id="stat-rank" class="stat-value">--</div>
+    </div>
+  </section>
+  <section class="actions-grid">
+    <a href="/quiz" class="action-card glass-card" style="border-color: #7c3aed;">
+      <div class="action-icon">🧠</div>
+      <div class="action-name">Quiz</div>
+      <div class="action-desc">Test your knowledge</div>
+    </a>
+    <a href="/debug" class="action-card glass-card" style="border-color: #06d6a0;">
+      <div class="action-icon">🐛</div>
+      <div class="action-name">Debug</div>
+      <div class="action-desc">Fix the code</div>
+    </a>
+    <a href="/ideathon" class="action-card glass-card" style="border-color: #f59e0b;">
+      <div class="action-icon">💡</div>
+      <div class="action-name">Ideathon</div>
+      <div class="action-desc">Present your idea</div>
+    </a>
+    <a href="/leaderboard" class="action-card glass-card" style="border-color: #ef4444;">
+      <div class="action-icon">🏆</div>
+      <div class="action-name">Leaderboard</div>
+      <div class="action-desc">View rankings</div>
+    </a>
+  </section>
+  <section class="announcements-section">
+    <h2 class="section-title">Announcements</h2>
+    <div id="announcements-list" class="announcements-list"></div>
+  </section>
+</main>
+{% endblock %}

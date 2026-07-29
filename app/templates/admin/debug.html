@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}HackSphere - Admin Debug{% endblock %}
+{% block content %}
+<nav class="navbar">
+  <div class="nav-left">
+    <span class="nav-logo">⚡ HackSphere Admin</span>
+  </div>
+  <div class="nav-right">
+    <span id="user-name" class="nav-user"></span>
+    <button id="logout-btn" class="btn btn-sm btn-danger">Logout</button>
+  </div>
+</nav>
+<div class="admin-layout">
+  <nav class="admin-tabs">
+    <a href="/admin/dashboard" class="admin-tab">Dashboard</a>
+    <a href="/admin/teams" class="admin-tab">Teams</a>
+    <a href="/admin/quiz" class="admin-tab">Quiz</a>
+    <a href="/admin/debug" class="admin-tab active">Debug</a>
+    <a href="/admin/ideathon" class="admin-tab">Ideathon</a>
+    <a href="/admin/violations" class="admin-tab">Violations</a>
+    <a href="/admin/announcements" class="admin-tab">Announcements</a>
+  </nav>
+  <main class="admin-content">
+    <section class="round-controls">
+      <h2>Round Controls</h2>
+      <div id="debug-round-controls" class="round-buttons"></div>
+    </section>
+    <section class="add-challenge-section">
+      <h2>Add Challenge</h2>
+      <form id="add-challenge-form" class="admin-form">
+        <div class="form-group">
+          <label for="ch-title">Title</label>
+          <input type="text" id="ch-title" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label for="ch-description">Description</label>
+          <textarea id="ch-description" class="form-input" rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="ch-buggy-code">Buggy Code</label>
+          <textarea id="ch-buggy-code" class="form-input code-input" rows="10" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="ch-public-tests">Public Tests (JSON array)</label>
+          <textarea id="ch-public-tests" class="form-input" rows="4" placeholder='[{"input": "...", "expected": "..."}]'></textarea>
+        </div>
+        <div class="form-group">
+          <label for="ch-hidden-tests">Hidden Tests (JSON array)</label>
+          <textarea id="ch-hidden-tests" class="form-input" rows="4" placeholder='[{"input": "...", "expected": "..."}]'></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="ch-difficulty">Difficulty</label>
+            <select id="ch-difficulty" class="form-input">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="ch-points">Points</label>
+            <input type="number" id="ch-points" class="form-input" value="50" min="1" required>
+          </div>
+          <div class="form-group">
+            <label for="ch-time">Time Limit (minutes)</label>
+            <input type="number" id="ch-time" class="form-input" value="10" min="1" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Challenge</button>
+      </form>
+    </section>
+    <section class="challenges-list-section">
+      <h2>Existing Challenges</h2>
+      <div id="challenges-list" class="challenges-list"></div>
+    </section>
+    <section class="submissions-section">
+      <h2>Submissions Overview</h2>
+      <div id="submissions-overview" class="submissions-overview"></div>
+    </section>
+  </main>
+</div>
+{% endblock %}

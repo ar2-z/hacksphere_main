@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}HackSphere - Violations{% endblock %}
+{% block content %}
+<nav class="navbar">
+  <div class="nav-left">
+    <span class="nav-logo">⚡ HackSphere Admin</span>
+  </div>
+  <div class="nav-right">
+    <span id="user-name" class="nav-user"></span>
+    <button id="logout-btn" class="btn btn-sm btn-danger">Logout</button>
+  </div>
+</nav>
+<div class="admin-layout">
+  <nav class="admin-tabs">
+    <a href="/admin/dashboard" class="admin-tab">Dashboard</a>
+    <a href="/admin/teams" class="admin-tab">Teams</a>
+    <a href="/admin/quiz" class="admin-tab">Quiz</a>
+    <a href="/admin/debug" class="admin-tab">Debug</a>
+    <a href="/admin/ideathon" class="admin-tab">Ideathon</a>
+    <a href="/admin/violations" class="admin-tab active">Violations</a>
+    <a href="/admin/announcements" class="admin-tab">Announcements</a>
+  </nav>
+  <main class="admin-content">
+    <div class="table-wrapper">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Team</th>
+            <th>User</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="violations-table-body"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}HackSphere - Debug Challenge{% endblock %}
+{% block content %}
+<nav class="navbar">
+  <div class="nav-left">
+    <span class="nav-logo">⚡ HackSphere</span>
+    <a href="/dashboard" class="nav-link">Dashboard</a>
+  </div>
+  <div class="nav-right">
+    <span id="user-name" class="nav-user"></span>
+    <button id="logout-btn" class="btn btn-sm btn-danger">Logout</button>
+  </div>
+</nav>
+<main class="container debug-layout">
+  <div id="debug-loading" class="loading-state">Loading challenges...</div>
+  <div id="debug-waiting" class="debug-state hidden">
+    <div class="glass-card text-center">
+      <h2>Debug round not yet started</h2>
+      <p>Waiting for the admin to start the debug round.</p>
+    </div>
+  </div>
+  <div id="debug-active" class="debug-state hidden">
+    <aside class="challenge-sidebar">
+      <div class="glass-card">
+        <div class="timer-card">
+          <span class="timer-label">Time Left</span>
+          <span id="debug-timer" class="timer-value">00:00</span>
+        </div>
+        <h3>Challenges</h3>
+        <ul id="challenge-list" class="challenge-list"></ul>
+      </div>
+    </aside>
+    <section class="challenge-main">
+      <div id="challenge-detail" class="glass-card">
+        <h2 id="challenge-title" class="challenge-title"></h2>
+        <p id="challenge-description" class="challenge-description"></p>
+        <div class="code-block">
+          <pre><code id="buggy-code"></code></pre>
+        </div>
+        <div id="public-tests" class="test-cases">
+          <h3>Public Test Cases</h3>
+          <div id="test-list" class="test-list"></div>
+        </div>
+        <div class="submission-area">
+          <div class="form-group">
+            <label for="code-input">Your Solution</label>
+            <textarea id="code-input" class="form-input code-input" rows="10" placeholder="Write your fix here..."></textarea>
+          </div>
+          <div class="submission-controls">
+            <span id="attempt-info" class="attempt-info">Attempts remaining: 3</span>
+            <button id="submit-code" class="btn btn-primary">Submit</button>
+          </div>
+        </div>
+        <div id="debug-results" class="debug-results hidden">
+          <h3>Results</h3>
+          <div id="test-results" class="test-results"></div>
+          <div id="hidden-results" class="hidden-test-results hidden">
+            <h4>Hidden Tests</h4>
+            <div id="hidden-test-results-list"></div>
+          </div>
+          <div class="score-display">
+            <span>Score: </span><span id="debug-score">0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+{% endblock %}

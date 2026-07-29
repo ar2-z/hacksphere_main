@@ -1,155 +1,157 @@
-from __future__ import annotations
-
-import logging
 import os
-import time
-from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from pathlib import Path
-from typing import Any
-
-import structlog
-from fastapi import FastAPI, Request, status
-from fastapi.exceptions import HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, ORJSONResponse
+from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.staticfiles import StaticFiles
-
-from app.api.v1.router import api_router
-from app.api.v1.routes.health import router as health_router
-from app.core.config import settings
-from app.infrastructure.cache.redis import cache
-from app.infrastructure.database.base import close_db, init_db
-from app.websockets.manager import manager
-from app.websockets.routes import router as ws_router
-from app.websockets.quiz import router as quiz_ws_router
-from app.websockets.debugging import router as debug_ws_router
-from app.websockets.ideathon import router as ideathon_ws_router
-from app.websockets.clues import router as clues_ws_router
-from app.websockets.leaderboard import router as leaderboard_ws_router
-from app.websockets.anticheat import router as anticheat_ws_router
-from app.websockets.admin import router as admin_ws_router
-
-try:
-    from app.api.v1.routes.metrics import router as metrics_router, MetricsMiddleware
-    HAS_METRICS = True
-except ImportError:
-    HAS_METRICS = False
-
-logger = structlog.get_logger()
-
-
-def _get_cors_origins() -> list[str]:
-    origins = list(settings.CORS_ORIGINS)
-    if "*" not in origins:
-        origins.append("*")
-    return origins
-
-
-FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
-_SPA_PREFIXES = ("/api/", "/health", "/ws/", "/docs", "/redoc", "/openapi.json")
-
+from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from sqlalchemy.orm import Session
+from .config import settings
+from .database import get_db, init_db
+from .schemas import LoginRequest, RegisterRequest, TokenResponse
+from .auth import create_access_token, get_current_user, authenticate_user, on_register
+from .models import User
+from .quiz import router as quiz_router
+from .debug import router as debug_router
+from .ideathon import router as ideathon_router
+from .admin import router as admin_router
+from .leaderboard import router as leaderboard_router
+from .heartbeat import router as heartbeat_router
+from .teams import router as teams_router
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    logger.info("Starting HackSphere", env=settings.APP_ENV, host=settings.HOST, port=settings.PORT)
-    await cache.connect()
-    await init_db()
-    logger.info("Database initialized")
+async def lifespan(app: FastAPI):
+    init_db()
     yield
-    await close_db()
-    await cache.disconnect()
-    logger.info("HackSphere shutdown complete")
 
-
-app = FastAPI(
-    title=settings.APP_NAME,
-    version=settings.APP_VERSION,
-    description="Enterprise-grade Cloud-native Hackathon Management Platform",
-    docs_url="/docs" if settings.is_development else None,
-    redoc_url="/redoc" if settings.is_development else None,
-    default_response_class=ORJSONResponse,
-    lifespan=lifespan,
-)
+app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_get_cors_origins(),
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-if HAS_METRICS:
-    app.add_middleware(MetricsMiddleware)
+static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
+app.include_router(quiz_router)
+app.include_router(debug_router)
+app.include_router(ideathon_router)
+app.include_router(admin_router)
+app.include_router(leaderboard_router)
+app.include_router(heartbeat_router)
+app.include_router(teams_router)
 
-@app.middleware("http")
-async def add_process_time_header(request: Request, call_next: Any) -> Any:
-    start_time = time.time()
-    response = await call_next(request)
-    process_time = time.time() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
-    return response
-
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    logger.error("Unhandled exception", error=str(exc), path=request.url.path)
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={
-            "success": False,
-            "message": "Internal server error",
-            "error_code": "INTERNAL_ERROR",
+@app.post("/api/auth/register")
+def register_user(data: RegisterRequest, db: Session = Depends(get_db)):
+    user = on_register(db, data)
+    token = create_access_token({"user_id": user.id, "role": user.role})
+    return TokenResponse(
+        access_token=token,
+        user={
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role,
         },
     )
 
-
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "success": False,
-            "message": exc.detail,
-            "error_code": "HTTP_ERROR",
+@app.post("/api/auth/login")
+def login_user(data: LoginRequest, db: Session = Depends(get_db)):
+    user = authenticate_user(db, data.username, data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+        )
+    token = create_access_token({"user_id": user.id, "role": user.role})
+    return TokenResponse(
+        access_token=token,
+        user={
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role,
         },
     )
 
+@app.get("/api/auth/me")
+def me(current_user: User = Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "role": current_user.role,
+        "is_active": current_user.is_active,
+    }
 
-app.include_router(api_router)
-app.include_router(health_router)
-if HAS_METRICS:
-    app.include_router(metrics_router)
-app.include_router(ws_router)
-app.include_router(quiz_ws_router)
-app.include_router(debug_ws_router)
-app.include_router(ideathon_ws_router)
-app.include_router(clues_ws_router)
-app.include_router(leaderboard_ws_router)
-app.include_router(anticheat_ws_router)
-app.include_router(admin_ws_router)
+@app.get("/api/auth/check")
+def auth_check(current_user: User = Depends(get_current_user)):
+    return {"authenticated": True, "role": current_user.role}
 
-if FRONTEND_DIR.exists():
-    app.mount("/assets", StaticFiles(directory=str(FRONTEND_DIR / "assets")), name="static-assets")
+@app.get("/")
+def root():
+    return RedirectResponse(url="/login")
 
-    @app.middleware("http")
-    async def spa_fallback(request: Request, call_next: Any) -> Any:
-        response = await call_next(request)
-        if request.method == "GET" and response.status_code in (404, 405):
-            path = request.url.path
-            if not any(path.startswith(p) for p in _SPA_PREFIXES):
-                file_path = FRONTEND_DIR / path.lstrip("/")
-                if file_path.is_file():
-                    return FileResponse(str(file_path))
-                return FileResponse(str(FRONTEND_DIR / "index.html"))
-        return response
-else:
-    @app.get("/")
-    async def root() -> dict[str, str]:
-        return {
-            "name": settings.APP_NAME,
-            "version": settings.APP_VERSION,
-            "docs": "/docs" if settings.is_development else "disabled",
-        }
+@app.get("/login")
+def login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/register")
+def register_page(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
+
+@app.get("/dashboard")
+def dashboard_page(request: Request):
+    return templates.TemplateResponse("dashboard.html", {"request": request})
+
+@app.get("/quiz")
+def quiz_page(request: Request):
+    return templates.TemplateResponse("quiz.html", {"request": request})
+
+@app.get("/debug")
+def debug_page(request: Request):
+    return templates.TemplateResponse("debug.html", {"request": request})
+
+@app.get("/ideathon")
+def ideathon_page(request: Request):
+    return templates.TemplateResponse("ideathon.html", {"request": request})
+
+@app.get("/leaderboard")
+def leaderboard_page(request: Request):
+    return templates.TemplateResponse("leaderboard.html", {"request": request})
+
+@app.get("/admin")
+def admin_page(request: Request):
+    return templates.TemplateResponse("admin/dashboard.html", {"request": request})
+
+@app.get("/admin/teams")
+def admin_teams_page(request: Request):
+    return templates.TemplateResponse("admin/teams.html", {"request": request})
+
+@app.get("/admin/quiz")
+def admin_quiz_page(request: Request):
+    return templates.TemplateResponse("admin/quiz.html", {"request": request})
+
+@app.get("/admin/debug")
+def admin_debug_page(request: Request):
+    return templates.TemplateResponse("admin/debug.html", {"request": request})
+
+@app.get("/admin/ideathon")
+def admin_ideathon_page(request: Request):
+    return templates.TemplateResponse("admin/ideathon.html", {"request": request})
+
+@app.get("/admin/violations")
+def admin_violations_page(request: Request):
+    return templates.TemplateResponse("admin/violations.html", {"request": request})
+
+@app.get("/admin/announcements")
+def admin_announcements_page(request: Request):
+    return templates.TemplateResponse("admin/announcements.html", {"request": request})

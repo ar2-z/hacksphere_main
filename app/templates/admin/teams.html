@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}HackSphere - Manage Teams{% endblock %}
+{% block content %}
+<nav class="navbar">
+  <div class="nav-left">
+    <span class="nav-logo">⚡ HackSphere Admin</span>
+  </div>
+  <div class="nav-right">
+    <span id="user-name" class="nav-user"></span>
+    <button id="logout-btn" class="btn btn-sm btn-danger">Logout</button>
+  </div>
+</nav>
+<div class="admin-layout">
+  <nav class="admin-tabs">
+    <a href="/admin/dashboard" class="admin-tab">Dashboard</a>
+    <a href="/admin/teams" class="admin-tab active">Teams</a>
+    <a href="/admin/quiz" class="admin-tab">Quiz</a>
+    <a href="/admin/debug" class="admin-tab">Debug</a>
+    <a href="/admin/ideathon" class="admin-tab">Ideathon</a>
+    <a href="/admin/violations" class="admin-tab">Violations</a>
+    <a href="/admin/announcements" class="admin-tab">Announcements</a>
+  </nav>
+  <main class="admin-content">
+    <div class="table-wrapper">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Team Name</th>
+            <th>Leader</th>
+            <th>Members</th>
+            <th>Member Count</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="teams-table-body"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+<div id="confirm-dialog" class="modal-overlay hidden">
+  <div class="modal-content glass-card">
+    <h3>Confirm Action</h3>
+    <p id="confirm-message"></p>
+    <div class="modal-actions">
+      <button id="confirm-yes" class="btn btn-danger">Confirm</button>
+      <button id="confirm-no" class="btn btn-secondary">Cancel</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

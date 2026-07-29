@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}HackSphere - Admin Dashboard{% endblock %}
+{% block content %}
+<nav class="navbar">
+  <div class="nav-left">
+    <span class="nav-logo">⚡ HackSphere Admin</span>
+  </div>
+  <div class="nav-right">
+    <span id="user-name" class="nav-user"></span>
+    <button id="logout-btn" class="btn btn-sm btn-danger">Logout</button>
+  </div>
+</nav>
+<div class="admin-layout">
+  <nav class="admin-tabs">
+    <a href="/admin/dashboard" class="admin-tab active">Dashboard</a>
+    <a href="/admin/teams" class="admin-tab">Teams</a>
+    <a href="/admin/quiz" class="admin-tab">Quiz</a>
+    <a href="/admin/debug" class="admin-tab">Debug</a>
+    <a href="/admin/ideathon" class="admin-tab">Ideathon</a>
+    <a href="/admin/violations" class="admin-tab">Violations</a>
+    <a href="/admin/announcements" class="admin-tab">Announcements</a>
+  </nav>
+  <main class="admin-content">
+    <section class="stats-strip" id="stats-strip">
+      <div class="stat-block">
+        <span class="stat-number" id="stat-total">0</span>
+        <span class="stat-label">Total Joined</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-number active-stat" id="stat-active">0</span>
+        <span class="stat-label">Active Now</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-number idle-stat" id="stat-idle">0</span>
+        <span class="stat-label">Idle</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-number left-stat" id="stat-left">0</span>
+        <span class="stat-label">Left</span>
+      </div>
+    </section>
+    <section class="round-controls">
+      <h2>Round Controls</h2>
+      <div class="round-controls-grid">
+        <div class="glass-card round-control-card">
+          <h3>Quiz</h3>
+          <div class="control-buttons">
+            <button class="btn btn-sm btn-success" data-phase="quiz" data-action="start">Start</button>
+            <button class="btn btn-sm btn-warning" data-phase="quiz" data-action="pause">Pause</button>
+            <button class="btn btn-sm btn-danger" data-phase="quiz" data-action="end">End</button>
+          </div>
+        </div>
+        <div class="glass-card round-control-card">
+          <h3>Debug</h3>
+          <div class="control-buttons">
+            <button class="btn btn-sm btn-success" data-phase="debug" data-action="start">Start</button>
+            <button class="btn btn-sm btn-warning" data-phase="debug" data-action="pause">Pause</button>
+            <button class="btn btn-sm btn-danger" data-phase="debug" data-action="end">End</button>
+          </div>
+        </div>
+        <div class="glass-card round-control-card">
+          <h3>Ideathon</h3>
+          <div class="control-buttons">
+            <button class="btn btn-sm btn-success" data-phase="ideathon" data-action="start">Start</button>
+            <button class="btn btn-sm btn-warning" data-phase="ideathon" data-action="pause">Pause</button>
+            <button class="btn btn-sm btn-danger" data-phase="ideathon" data-action="end">End</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="participants-table-section">
+      <h2>Live Participants</h2>
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Team / Participant</th>
+              <th>Status</th>
+              <th>Last Active</th>
+              <th>Current Phase</th>
+              <th>Score</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="participants-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+{% endblock %}
