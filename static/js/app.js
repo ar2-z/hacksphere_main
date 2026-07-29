@@ -633,7 +633,7 @@ function initAdminDashboard() {
     try {
       const data = await fetchApi('/participants/stats');
       if (!data) return;
-      document.getElementById('stat-total').textContent = data.total ?? 0;
+      document.getElementById('stat-total').textContent = data.total_participants ?? 0;
       document.getElementById('stat-active').textContent = data.active ?? 0;
       document.getElementById('stat-idle').textContent = data.idle ?? 0;
       document.getElementById('stat-left').textContent = data.left ?? 0;

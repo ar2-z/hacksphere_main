@@ -384,8 +384,8 @@ def list_violations(db: Session = Depends(get_db)):
     violations = db.query(Violation).all()
     result = []
     for v in violations:
-        team = db.query(Team).filter(Team.id == v.team_id).first()
-        user = db.query(User).filter(User.id == v.user_id).first()
+        team = db.query(Team).filter(Team.id == v.team_id).first() if v.team_id else None
+        user = db.query(User).filter(User.id == v.user_id).first() if v.user_id else None
         result.append({
             "id": v.id,
             "team_id": v.team_id,
@@ -597,3 +597,67 @@ def move_presentation_slot(team_id: int, body: dict, db: Session = Depends(get_d
     sub.presentation_slot, other.presentation_slot = other.presentation_slot, sub.presentation_slot
     db.commit()
     return {"detail": "Slot moved"}
+
+@router.post("/quiz/start")
+def admin_quiz_start(db: Session = Depends(get_db)):
+    rnd = db.query(Round).filter(Round.phase == "quiz", Round.status != "completed").order_by(Round.round_number).first()
+    if not rnd:
+        rnd = db.query(Round).filter(Round.phase == "quiz").order_by(Round.round_number).first()
+    if rnd:
+        rnd.status = "active"
+        rnd.started_at = datetime.now(timezone.utc)
+    db.query(Competition).filter(Competition.is_active == True).update({"current_phase": "quiz"})
+    db.commit()
+    return {"detail": "Quiz started"}
+
+@router.post("/quiz/pause")
+def admin_quiz_pause(db: Session = Depends(get_db)):
+    for rnd in db.query(Round).filter(Round.phase == "quiz", Round.status == "active").all():
+        rnd.status = "paused"
+    db.commit()
+    return {"detail": "Quiz paused"}
+
+@router.post("/quiz/end")
+def admin_quiz_end(db: Session = Depends(get_db)):
+    for rnd in db.query(Round).filter(Round.phase == "quiz", Round.status.in_(["active", "paused"])).all():
+        rnd.status = "completed"
+    db.commit()
+    return {"detail": "Quiz ended"}
+
+@router.post("/debug/start")
+def admin_debug_start(db: Session = Depends(get_db)):
+    rnd = db.query(Round).filter(Round.phase == "debug", Round.status != "completed").order_by(Round.round_number).first()
+    if not rnd:
+        rnd = db.query(Round).filter(Round.phase == "debug").order_by(Round.round_number).first()
+    if rnd:
+        rnd.status = "active"
+        rnd.started_at = datetime.now(timezone.utc)
+    db.query(Competition).filter(Competition.is_active == True).update({"current_phase": "debugging"})
+    db.commit()
+    return {"detail": "Debug started"}
+
+@router.post("/debug/pause")
+def admin_debug_pause(db: Session = Depends(get_db)):
+    for rnd in db.query(Round).filter(Round.phase == "debug", Round.status == "active").all():
+        rnd.status = "paused"
+    db.commit()
+    return {"detail": "Debug paused"}
+
+@router.post("/debug/end")
+def admin_debug_end(db: Session = Depends(get_db)):
+    for rnd in db.query(Round).filter(Round.phase == "debug", Round.status.in_(["active", "paused"])).all():
+        rnd.status = "completed"
+    db.commit()
+    return {"detail": "Debug ended"}
+
+@router.post("/ideathon/start")
+def admin_ideathon_start(db: Session = Depends(get_db)):
+    db.query(Competition).filter(Competition.is_active == True).update({"current_phase": "ideathon"})
+    db.commit()
+    return {"detail": "Ideathon started"}
+
+@router.post("/ideathon/end")
+def admin_ideathon_end(db: Session = Depends(get_db)):
+    db.query(Competition).filter(Competition.is_active == True).update({"current_phase": "completed"})
+    db.commit()
+    return {"detail": "Ideathon ended"}
