@@ -23,7 +23,14 @@ def get_db():
 
 def init_db():
     from . import models
-    models.Base.metadata.create_all(bind=engine)
+    try:
+        models.Base.metadata.create_all(bind=engine)
+        db = SessionLocal()
+        db.execute("SELECT current_phase FROM competitions LIMIT 1")
+        db.close()
+    except Exception:
+        models.Base.metadata.drop_all(bind=engine)
+        models.Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
         competition = db.query(models.Competition).first()
