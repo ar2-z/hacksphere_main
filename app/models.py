@@ -179,7 +179,7 @@ class Violation(Base):
     __tablename__ = "violations"
 
     id = Column(Integer, primary_key=True, index=True)
-    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     violation_type = Column(String, nullable=False)
     description = Column(Text, nullable=True)
