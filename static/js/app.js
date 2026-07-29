@@ -122,6 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
     roleEl.textContent = role;
     roleEl.className = `badge badge-${role}`;
   }
+  const adminMembersLink = document.getElementById('admin-members-link');
+  if (adminMembersLink && user.role === 'admin') {
+    adminMembersLink.classList.remove('hidden');
+  }
 
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) logoutBtn.addEventListener('click', logoutUser);
