@@ -945,22 +945,32 @@ function initAdminMembers() {
       if (!data) return;
       const members = Array.isArray(data) ? data : (data.participants || []);
       const tbody = document.getElementById('members-table-body');
-      tbody.innerHTML = members.map(p => `
-        <tr>
+      let active = 0, idle = 0, left = 0;
+      tbody.innerHTML = members.map(p => {
+        const s = (p.status || 'Left').toLowerCase();
+        if (s === 'active') active++;
+        else if (s === 'idle') idle++;
+        else left++;
+        return `<tr>
           <td>${p.username || '--'}</td>
           <td>${p.full_name || '--'}</td>
           <td>${p.email || '--'}</td>
           <td><span class="badge badge-${p.role === 'admin' ? 'danger' : 'info'}">${p.role || 'member'}</span></td>
           <td>${p.team_name || '<em>No team</em>'}</td>
-          <td class="status-${p.status?.toLowerCase() || 'left'}">${p.status || 'Left'}</td>
+          <td class="status-${s}">${p.status || 'Left'}</td>
           <td>${p.last_active ? new Date(p.last_active).toLocaleString() : '--'}</td>
           <td>
             <button class="btn btn-sm btn-warning" onclick="adminAction(${p.id},'warn')">Warn</button>
             <button class="btn btn-sm btn-danger" onclick="adminAction(${p.id},'kick')">Kick</button>
             <button class="btn btn-sm btn-danger" onclick="adminAction(${p.id},'disqualify')">DQ</button>
           </td>
-        </tr>
-      `).join('');
+        </tr>`;
+      }).join('');
+      const total = members.length;
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-active').textContent = active;
+      document.getElementById('stat-idle').textContent = idle;
+      document.getElementById('stat-left').textContent = left;
     } catch (e) {}
   }
   loadMembers();
