@@ -939,6 +939,11 @@ function initAdminIdeathon() {
 }
 
 function initAdminMembers() {
+  const user = getUserFromStorage();
+  if (user.role !== 'admin') {
+    window.location.href = '/dashboard';
+    return;
+  }
   async function loadMembers() {
     try {
       const data = await fetchApi('/participants');

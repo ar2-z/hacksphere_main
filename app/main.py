@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from .config import settings
 from .database import get_db, init_db
 from .schemas import LoginRequest, RegisterRequest, TokenResponse
-from .auth import create_access_token, get_current_user, authenticate_user, on_register
+from .auth import create_access_token, get_current_user, authenticate_user, on_register, require_role
 from .models import User
 from .quiz import router as quiz_router
 from .debug import router as debug_router
@@ -149,7 +149,7 @@ def admin_ideathon_page(request: Request):
     return templates.TemplateResponse("admin/ideathon.html", {"request": request})
 
 @app.get("/admin/members")
-def admin_members_page(request: Request):
+def admin_members_page(request: Request, current_user: User = Depends(require_role(["admin"]))):
     return templates.TemplateResponse("admin/members.html", {"request": request})
 
 @app.get("/admin/violations")
