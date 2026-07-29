@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const errEl = document.getElementById('error-message');
       try {
         const res = await registerUser(data);
-        if (res && res.id) {
+        if (res && res.access_token) {
           showAlert('Registration successful! Please log in.', 'success');
           setTimeout(() => window.location.href = '/login', 1500);
         } else {
@@ -194,6 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.location.pathname === '/admin/quiz') initAdminQuiz();
   if (window.location.pathname === '/admin/debug') initAdminDebug();
   if (window.location.pathname === '/admin/ideathon') initAdminIdeathon();
+  if (window.location.pathname === '/admin/members') initAdminMembers();
   if (window.location.pathname === '/admin/violations') initAdminViolations();
   if (window.location.pathname === '/admin/announcements') initAdminAnnouncements();
 });
@@ -935,6 +936,35 @@ function initAdminIdeathon() {
 
   loadTeams();
   loadPresentationOrder();
+}
+
+function initAdminMembers() {
+  async function loadMembers() {
+    try {
+      const data = await fetchApi('/participants');
+      if (!data) return;
+      const members = Array.isArray(data) ? data : (data.participants || []);
+      const tbody = document.getElementById('members-table-body');
+      tbody.innerHTML = members.map(p => `
+        <tr>
+          <td>${p.username || '--'}</td>
+          <td>${p.full_name || '--'}</td>
+          <td>${p.email || '--'}</td>
+          <td><span class="badge badge-${p.role === 'admin' ? 'danger' : 'info'}">${p.role || 'member'}</span></td>
+          <td>${p.team_name || '<em>No team</em>'}</td>
+          <td class="status-${p.status?.toLowerCase() || 'left'}">${p.status || 'Left'}</td>
+          <td>${p.last_active ? new Date(p.last_active).toLocaleString() : '--'}</td>
+          <td>
+            <button class="btn btn-sm btn-warning" onclick="adminAction(${p.id},'warn')">Warn</button>
+            <button class="btn btn-sm btn-danger" onclick="adminAction(${p.id},'kick')">Kick</button>
+            <button class="btn btn-sm btn-danger" onclick="adminAction(${p.id},'disqualify')">DQ</button>
+          </td>
+        </tr>
+      `).join('');
+    } catch (e) {}
+  }
+  loadMembers();
+  setInterval(loadMembers, 5000);
 }
 
 function initAdminViolations() {

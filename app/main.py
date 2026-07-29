@@ -148,6 +148,10 @@ def admin_debug_page(request: Request):
 def admin_ideathon_page(request: Request):
     return templates.TemplateResponse("admin/ideathon.html", {"request": request})
 
+@app.get("/admin/members")
+def admin_members_page(request: Request):
+    return templates.TemplateResponse("admin/members.html", {"request": request})
+
 @app.get("/admin/violations")
 def admin_violations_page(request: Request):
     return templates.TemplateResponse("admin/violations.html", {"request": request})

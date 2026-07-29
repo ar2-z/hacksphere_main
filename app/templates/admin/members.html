@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}HackSphere - Admin Ideathon{% endblock %}
+{% block title %}HackSphere - Admin Members{% endblock %}
 {% block content %}
 <nav class="navbar">
   <div class="nav-left">
@@ -13,22 +13,34 @@
 <div class="admin-layout">
   <nav class="admin-tabs">
     <a href="/admin/dashboard" class="admin-tab">Dashboard</a>
-    <a href="/admin/members" class="admin-tab">Members</a>
+    <a href="/admin/members" class="admin-tab active">Members</a>
     <a href="/admin/teams" class="admin-tab">Teams</a>
     <a href="/admin/quiz" class="admin-tab">Quiz</a>
     <a href="/admin/debug" class="admin-tab">Debug</a>
-    <a href="/admin/ideathon" class="admin-tab active">Ideathon</a>
+    <a href="/admin/ideathon" class="admin-tab">Ideathon</a>
     <a href="/admin/violations" class="admin-tab">Violations</a>
     <a href="/admin/announcements" class="admin-tab">Announcements</a>
   </nav>
   <main class="admin-content">
-    <section class="ideathon-controls-section">
-      <h2>Presentation Order Management</h2>
-      <div id="presentation-order" class="presentation-order"></div>
-    </section>
-    <section class="ideathon-teams-section">
-      <h2>Teams</h2>
-      <div id="ideathon-teams" class="ideathon-teams"></div>
+    <section>
+      <h2>Registered Members</h2>
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Team</th>
+              <th>Status</th>
+              <th>Last Active</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="members-table-body"></tbody>
+        </table>
+      </div>
     </section>
   </main>
 </div>
