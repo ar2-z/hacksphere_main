@@ -129,6 +129,7 @@ def leaderboard_page(request: Request):
     return templates.TemplateResponse("leaderboard.html", {"request": request})
 
 @app.get("/admin")
+@app.get("/admin/dashboard")
 def admin_page(request: Request):
     return templates.TemplateResponse("admin/dashboard.html", {"request": request})
 
