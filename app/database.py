@@ -43,6 +43,11 @@ def init_db():
                 conn.execute(text("CREATE SCHEMA public"))
                 conn.commit()
             models.Base.metadata.create_all(bind=engine)
+    is_pg = "postgresql" in settings.database_url
+    if is_pg:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE violations ALTER COLUMN team_id DROP NOT NULL"))
+            conn.commit()
     db = SessionLocal()
     try:
         competition = db.query(models.Competition).first()
