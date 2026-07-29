@@ -146,6 +146,29 @@ def team_action(team_id: int, body: dict, db: Session = Depends(get_db), current
     raise HTTPException(status_code=400, detail="Invalid action")
 
 
+@router.post("/participants/{user_id}/{action}")
+def participant_action(user_id: int, action: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if action == "warn":
+        v = Violation(user_id=user_id, violation_type="warn", description="Warned by admin")
+        db.add(v)
+    elif action == "kick":
+        v = Violation(user_id=user_id, violation_type="kick", description="Kicked by admin")
+        db.add(v)
+        user.is_active = False
+    elif action == "disqualify":
+        v = Violation(user_id=user_id, violation_type="disqualify", description="Disqualified by admin")
+        db.add(v)
+        user.is_active = False
+        for tm in db.query(TeamMember).filter(TeamMember.user_id == user_id).all():
+            db.query(Team).filter(Team.id == tm.team_id).update({"is_eliminated": True})
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action")
+    db.commit()
+    return {"detail": f"User {action} successful"}
+
 @router.post("/teams/{team_id}/{action}")
 def team_action_url(team_id: int, action: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     team = db.query(Team).filter(Team.id == team_id).first()

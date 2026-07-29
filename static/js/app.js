@@ -222,10 +222,10 @@ function initDashboard() {
   }
   async function loadAnnouncements() {
     try {
-      const data = await fetchApi('/admin/announcements');
+      const data = await fetchApi('/announcements');
       if (!data) return;
       const list = document.getElementById('announcements-list');
-      const items = Array.isArray(data) ? data : (data.announcements || []);
+      const items = Array.isArray(data) ? data : [];
       list.innerHTML = items.map(a => `
         <div class="announcement-item">
           <div class="announcement-text">${a.message}</div>
