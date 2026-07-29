@@ -23,13 +23,17 @@ def get_db():
 
 def init_db():
     from . import models
+    from sqlalchemy import text
     try:
         models.Base.metadata.create_all(bind=engine)
         db = SessionLocal()
-        db.execute("SELECT current_phase FROM competitions LIMIT 1")
+        db.execute(text("SELECT current_phase FROM competitions LIMIT 1"))
         db.close()
     except Exception:
-        models.Base.metadata.drop_all(bind=engine)
+        with engine.connect() as conn:
+            conn.execute(text("DROP SCHEMA public CASCADE"))
+            conn.execute(text("CREATE SCHEMA public"))
+            conn.commit()
         models.Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
