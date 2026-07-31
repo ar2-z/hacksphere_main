@@ -8,8 +8,16 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from .config import settings
 from .database import get_db, init_db
-from .schemas import LoginRequest, RegisterRequest, TokenResponse
-from .auth import create_access_token, get_current_user, authenticate_user, on_register, login_limiter
+from .schemas import LoginRequest, RegisterRequest, TokenResponse, ChangePasswordRequest
+from .auth import (
+    create_access_token,
+    get_current_user,
+    authenticate_user,
+    on_register,
+    login_limiter,
+    verify_password,
+    get_password_hash,
+)
 from .models import User
 from .quiz import router as quiz_router
 from .debug import router as debug_router
@@ -89,6 +97,21 @@ def login_user(request: Request, data: LoginRequest, db: Session = Depends(get_d
             "role": user.role,
         },
     )
+
+@app.post("/api/auth/change-password")
+def change_password(
+    data: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not verify_password(data.current_password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect",
+        )
+    current_user.password_hash = get_password_hash(data.new_password)
+    db.commit()
+    return {"message": "Password updated successfully"}
 
 @app.get("/api/auth/me")
 def me(current_user: User = Depends(get_current_user)):

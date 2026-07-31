@@ -237,6 +237,44 @@ function initDashboard() {
   loadDashboard();
   loadAnnouncements();
   setInterval(loadAnnouncements, 5000);
+
+  const changePwForm = document.getElementById('change-password-form');
+  if (changePwForm) {
+    changePwForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const current = document.getElementById('current-password').value;
+      const next = document.getElementById('new-password').value;
+      const confirmPw = document.getElementById('confirm-new-password').value;
+      const msgEl = document.getElementById('password-change-message');
+      msgEl.classList.add('hidden');
+      if (next.length < 8) {
+        msgEl.textContent = 'New password must be at least 8 characters';
+        msgEl.className = 'alert alert-error';
+        msgEl.classList.remove('hidden');
+        return;
+      }
+      if (next !== confirmPw) {
+        msgEl.textContent = 'New passwords do not match';
+        msgEl.className = 'alert alert-error';
+        msgEl.classList.remove('hidden');
+        return;
+      }
+      try {
+        const data = await fetchApi('/auth/change-password', {
+          method: 'POST',
+          body: JSON.stringify({ current_password: current, new_password: next })
+        });
+        msgEl.textContent = data?.message || 'Password updated successfully';
+        msgEl.className = 'alert alert-success';
+        msgEl.classList.remove('hidden');
+        changePwForm.reset();
+      } catch (err) {
+        msgEl.textContent = err.message;
+        msgEl.className = 'alert alert-error';
+        msgEl.classList.remove('hidden');
+      }
+    });
+  }
 }
 
 function initQuiz() {
