@@ -113,7 +113,7 @@ scripts\setup_backend.bat
 
 1. Open browser: `http://LAPTOP1_IP`
 2. You should see the HackSphere login page
-3. Register an account or use admin: any email + password `Admin_main@123`
+3. Register an account, or create an admin with `python scripts/seed_admins.py`
 4. Check health: `http://LAPTOP2_IP:8000/health`
 
 ## Finding Laptop IPs

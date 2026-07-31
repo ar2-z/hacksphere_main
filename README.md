@@ -13,4 +13,4 @@ pinned: false
 
 Enterprise-grade hackathon management platform with Quiz, Debugging, and Ideathon phases.
 
-**Admin login:** Any email + password `Admin_main@123`
+**Admin login:** Run `python scripts/seed_admins.py` to create an admin account with a real password.

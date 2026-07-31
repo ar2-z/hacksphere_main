@@ -1,4 +1,5 @@
 import os
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from .database import get_db
@@ -48,7 +49,11 @@ def submit_idea(summary: str = Form(...), file: UploadFile = File(None), user=De
         if len(content) > settings.max_upload_size_mb * 1024 * 1024:
             raise HTTPException(400, "File exceeds 20MB limit")
         os.makedirs(settings.upload_dir, exist_ok=True)
-        file_path = os.path.join(settings.upload_dir, f"team_{team.id}_{file.filename}")
+        upload_root = os.path.abspath(settings.upload_dir)
+        stored_name = f"team_{team.id}_{uuid.uuid4().hex}{ext}"
+        file_path = os.path.join(upload_root, stored_name)
+        if os.path.commonpath([upload_root, os.path.abspath(file_path)]) != upload_root:
+            raise HTTPException(400, "Invalid file path")
         with open(file_path, "wb") as f:
             f.write(content)
     if existing:

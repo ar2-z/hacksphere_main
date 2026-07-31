@@ -61,11 +61,8 @@ def main() -> None:
         print(f"  Other devices on your LAN can access via:")
         print(f"    http://{detected_ip}:{port}")
         print(f"{'=' * 60}")
-        print(f"\n  Admin accounts (shared password: Admin_main@123):")
-        print(f"    admin@hacksphere.dev")
-        print(f"    quizmaster@hacksphere.dev")
-        print(f"    judge@hacksphere.dev")
-        print(f"    organizer@hacksphere.dev")
+        print(f"\n  Admin access:")
+        print(f"    Run: python scripts/seed_admins.py")
         print(f"{'=' * 60}\n")
     else:
         print(f"\nHackSphere starting on http://{host}:{port}\n")

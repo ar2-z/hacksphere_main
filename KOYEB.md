@@ -59,9 +59,8 @@ LOG_FORMAT=json
 3. Once deployed, click the **Public URL** to access
 
 ## Step 6: Admin Login
-- Go to your Koyeb URL
-- Register with any email + password `Admin_main@123`
-- You're in as admin!
+- Create an admin account by running `python scripts/seed_admins.py` (password from `ADMIN_PASSWORD` env var, interactive prompt, or auto-generated)
+- Login at your Koyeb URL with that account
 
 ## Limits (Free Tier)
 - 1 vCPU, 256MB RAM

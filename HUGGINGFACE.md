@@ -57,9 +57,8 @@ https://<YOUR_USERNAME>-hacksphere.hf.space
 ```
 
 ## Step 7: Admin Login
-- Go to your Space URL
-- Register with **any email** + password `Admin_main@123`
-- You're in as admin!
+- Create an admin account by running `python scripts/seed_admins.py` (password from `ADMIN_PASSWORD` env var, interactive prompt, or auto-generated)
+- Login at your Space URL with that account
 
 ## Database
 By default uses SQLite (file-based, no setup needed). Data persists across restarts on HF Spaces.

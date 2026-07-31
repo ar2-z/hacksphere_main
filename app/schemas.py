@@ -10,7 +10,7 @@ class RegisterRequest(BaseModel):
     username: str
     email: str
     full_name: str
-    password: str
+    password: str = Field(min_length=8)
 
 class TokenResponse(BaseModel):
     access_token: str

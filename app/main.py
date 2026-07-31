@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from .config import settings
 from .database import get_db, init_db
 from .schemas import LoginRequest, RegisterRequest, TokenResponse
-from .auth import create_access_token, get_current_user, authenticate_user, on_register
+from .auth import create_access_token, get_current_user, authenticate_user, on_register, login_limiter
 from .models import User
 from .quiz import router as quiz_router
 from .debug import router as debug_router
@@ -28,7 +28,7 @@ app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,13 +62,22 @@ def register_user(data: RegisterRequest, db: Session = Depends(get_db)):
     )
 
 @app.post("/api/auth/login")
-def login_user(data: LoginRequest, db: Session = Depends(get_db)):
+def login_user(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
+    client_ip = request.client.host if request.client else "unknown"
+    limiter_key = f"{client_ip}:{data.username}"
+    if not login_limiter.check(limiter_key):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many login attempts. Please try again later.",
+        )
     user = authenticate_user(db, data.username, data.password)
     if not user:
+        login_limiter.record(limiter_key)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
         )
+    login_limiter.reset(limiter_key)
     token = create_access_token({"user_id": user.id, "role": user.role})
     return TokenResponse(
         access_token=token,
