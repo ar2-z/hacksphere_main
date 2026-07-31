@@ -14,7 +14,12 @@ HEARTBEAT_MIN_INTERVAL_SECONDS = 10
 @router.post("/heartbeat")
 def heartbeat(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     now = datetime.now(timezone.utc)
-    if current_user.last_seen is None or (now - current_user.last_seen).total_seconds() >= HEARTBEAT_MIN_INTERVAL_SECONDS:
+    last = current_user.last_seen
+    if last is None:
+        last_utc = None
+    else:
+        last_utc = last if last.tzinfo else last.replace(tzinfo=timezone.utc)
+    if last_utc is None or (now - last_utc).total_seconds() >= HEARTBEAT_MIN_INTERVAL_SECONDS:
         db.query(User).filter(User.id == current_user.id).update({"last_seen": now})
         db.commit()
     return {"status": "ok"}
@@ -84,11 +89,13 @@ def list_participants(db: Session = Depends(get_db)):
         tm = db.query(TeamMember).filter(TeamMember.user_id == user.id).first()
         team = db.query(Team).filter(Team.id == tm.team_id).first() if tm else None
         now = datetime.now(timezone.utc)
-        if user.last_seen and user.last_seen >= now - timedelta(seconds=60):
+        last = user.last_seen
+        last_utc = last if (last is None or last.tzinfo) else last.replace(tzinfo=timezone.utc)
+        if last_utc and last_utc >= now - timedelta(seconds=60):
             status = "Active"
-        elif user.last_seen and user.last_seen >= now - timedelta(seconds=120):
+        elif last_utc and last_utc >= now - timedelta(seconds=120):
             status = "Idle"
-        elif user.last_seen:
+        elif last_utc:
             status = "Left"
         else:
             status = "Left"
