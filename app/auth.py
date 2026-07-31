@@ -10,7 +10,7 @@ from .database import get_db
 from .models import User
 from .schemas import RegisterRequest
 
-pwd_context = CryptContext(schemes=["bcrypt"])
+pwd_context = CryptContext(schemes=["bcrypt"], bcrypt__rounds=10)
 security = HTTPBearer()
 
 

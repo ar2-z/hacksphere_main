@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from .database import get_db
+from .cache import ttl_cache
 from .models import Team, Score, TeamMember
 from datetime import datetime, timedelta, timezone
 
@@ -8,6 +9,7 @@ router = APIRouter(prefix="/api/leaderboard", tags=["leaderboard"])
 
 
 @router.get("")
+@ttl_cache(ttl_seconds=5)
 def get_leaderboard(db: Session = Depends(get_db)):
     teams = db.query(Team).all()
     result = []

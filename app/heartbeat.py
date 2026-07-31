@@ -3,19 +3,25 @@ from sqlalchemy.orm import Session
 from .database import get_db
 from .models import User, Team, TeamMember, Announcement, Competition, Score
 from .auth import get_current_user
+from .cache import ttl_cache
 from datetime import datetime, timedelta, timezone
 
 router = APIRouter(prefix="/api", tags=["heartbeat"])
 
+HEARTBEAT_MIN_INTERVAL_SECONDS = 10
+
 
 @router.post("/heartbeat")
 def heartbeat(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    db.query(User).filter(User.id == current_user.id).update({"last_seen": datetime.now(timezone.utc)})
-    db.commit()
+    now = datetime.now(timezone.utc)
+    if current_user.last_seen is None or (now - current_user.last_seen).total_seconds() >= HEARTBEAT_MIN_INTERVAL_SECONDS:
+        db.query(User).filter(User.id == current_user.id).update({"last_seen": now})
+        db.commit()
     return {"status": "ok"}
 
 
 @router.get("/participants/stats")
+@ttl_cache(ttl_seconds=5)
 def participants_stats(db: Session = Depends(get_db)):
     now = datetime.now(timezone.utc)
     sixty_ago = now - timedelta(seconds=60)
@@ -60,6 +66,7 @@ def participants_me(user=Depends(get_current_user), db: Session = Depends(get_db
 
 
 @router.get("/announcements")
+@ttl_cache(ttl_seconds=5)
 def list_public_announcements(db: Session = Depends(get_db)):
     announcements = db.query(Announcement).filter(Announcement.is_active == True).all()
     return [
@@ -69,6 +76,7 @@ def list_public_announcements(db: Session = Depends(get_db)):
 
 
 @router.get("/participants")
+@ttl_cache(ttl_seconds=5)
 def list_participants(db: Session = Depends(get_db)):
     users = db.query(User).all()
     result = []
