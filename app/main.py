@@ -20,7 +20,7 @@ from .auth import (
 )
 from .models import User
 from .quiz import router as quiz_router
-from .debug import router as debug_router
+from .debug import router as debug_router, reset_stuck_submissions
 from .ideathon import router as ideathon_router
 from .admin import router as admin_router
 from .leaderboard import router as leaderboard_router
@@ -30,6 +30,7 @@ from .teams import router as teams_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    reset_stuck_submissions()
     yield
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)

@@ -497,41 +497,71 @@ function initDebug() {
         body: JSON.stringify({ challenge_id: selectedChallenge.id, code })
       });
       if (!data) return;
-      const resultsEl = document.getElementById('debug-results');
-      resultsEl.classList.remove('hidden');
-      const testResults = document.getElementById('test-results');
-      const tests = data.public_results || [];
-      testResults.innerHTML = tests.map((t, i) => `
-        <div class="test-item ${t.passed ? 'passed' : 'failed'}">
-          Test ${i + 1}: ${t.passed ? 'PASSED' : 'FAILED'} ${t.output ? `(Output: ${t.output})` : ''}
-        </div>
-      `).join('');
-      document.getElementById('debug-score').textContent = data.score ?? 0;
-      const hiddenEl = document.getElementById('hidden-results');
-      const hiddenList = document.getElementById('hidden-test-results-list');
-      if (data.hidden_results) {
-        hiddenList.innerHTML = (data.hidden_results || []).map((t, i) => `
-          <div class="test-item ${t.passed ? 'passed' : 'failed'}">
-            Hidden Test ${i + 1}: ${t.passed ? 'PASSED' : 'FAILED'}
-          </div>
-        `).join('');
-        hiddenEl.classList.remove('hidden');
-      } else {
-        hiddenEl.classList.add('hidden');
+      if (data.status !== 'running' || !data.submission_id) {
+        btn.disabled = false;
+        btn.textContent = 'Submit';
+        return;
       }
-      if (data.remaining_attempts !== undefined) {
-        document.getElementById('attempt-info').textContent = `Attempts remaining: ${data.remaining_attempts}`;
-      }
-      if (data.remaining_attempts === 0) {
-        btn.disabled = true;
+      const result = await pollJudgeResult(data.submission_id);
+      if (!result) return;
+      renderDebugResults(result);
+      if (result.remaining_attempts === 0) {
         btn.textContent = 'No attempts left';
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Submit';
       }
     } catch (err) {
       showAlert(err.message, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Submit';
     }
-    btn.disabled = false;
-    btn.textContent = 'Submit';
   });
+
+  async function pollJudgeResult(submissionId, maxTries = 80) {
+    for (let i = 0; i < maxTries; i++) {
+      const res = await fetchApi(`/debug/results/${submissionId}`);
+      if (!res) return null;
+      if (res.status === 'running') {
+        await new Promise(r => setTimeout(r, 1500));
+        continue;
+      }
+      return res;
+    }
+    return null;
+  }
+
+  function renderDebugResults(data) {
+    const resultsEl = document.getElementById('debug-results');
+    if (data.status === 'failed') {
+      showAlert(data.error || 'Execution failed', 'error');
+      return;
+    }
+    resultsEl.classList.remove('hidden');
+    const testResults = document.getElementById('test-results');
+    const tests = data.public_results || [];
+    testResults.innerHTML = tests.map((t, i) => `
+      <div class="test-item ${t.passed ? 'passed' : 'failed'}">
+        Test ${i + 1}: ${t.passed ? 'PASSED' : 'FAILED'} ${t.output ? `(Output: ${t.output})` : ''}
+      </div>
+    `).join('');
+    document.getElementById('debug-score').textContent = data.score ?? 0;
+    const hiddenEl = document.getElementById('hidden-results');
+    const hiddenList = document.getElementById('hidden-test-results-list');
+    if (data.hidden_results) {
+      hiddenList.innerHTML = (data.hidden_results || []).map((t, i) => `
+        <div class="test-item ${t.passed ? 'passed' : 'failed'}">
+          Hidden Test ${i + 1}: ${t.passed ? 'PASSED' : 'FAILED'}
+        </div>
+      `).join('');
+      hiddenEl.classList.remove('hidden');
+    } else {
+      hiddenEl.classList.add('hidden');
+    }
+    if (data.remaining_attempts !== undefined) {
+      document.getElementById('attempt-info').textContent = `Attempts remaining: ${data.remaining_attempts}`;
+    }
+  }
 
   loadDebugState();
   setInterval(loadDebugState, 5000);
