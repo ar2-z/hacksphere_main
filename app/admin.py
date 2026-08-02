@@ -2,7 +2,7 @@ import json
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from .database import get_db
-from .models import User, Team, TeamMember, Round, Competition, Score, Violation, Announcement, IdeathonSubmission, IdeathonProblem, Question, DebugChallenge, DebugSubmission
+from .models import User, Team, TeamMember, Round, Competition, Score, Violation, Announcement, IdeathonSubmission, IdeathonProblem, Question, DebugChallenge, DebugSubmission, Answer
 from .schemas import AnnouncementCreate
 from .auth import get_current_user, require_role
 from .quiz import start_round, pause_round, resume_round
@@ -421,6 +421,19 @@ def quiz_round_action(round_number: int, action: str, db: Session = Depends(get_
         raise HTTPException(400, "Invalid action")
     db.commit()
     return {"detail": f"Quiz round {round_number} {action}ed"}
+
+@router.post("/quiz/reset")
+def reset_quiz(db: Session = Depends(get_db)):
+    db.query(Answer).delete()
+    db.query(Score).filter(Score.phase == "quiz").delete()
+    db.query(Question).delete()
+    for rnd in db.query(Round).filter(Round.phase == "quiz").all():
+        rnd.status = "pending"
+        rnd.started_at = None
+        rnd.paused_at = None
+        rnd.total_paused_seconds = 0
+    db.commit()
+    return {"detail": "Quiz reset: questions, answers and scores cleared; rounds set to pending"}
 
 @router.post("/quiz/questions")
 def create_question(body: dict, db: Session = Depends(get_db)):

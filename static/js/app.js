@@ -1220,6 +1220,19 @@ async function adminRoundAction(phase, round, action) {
   }
 }
 
+async function resetQuiz() {
+  if (!confirm('This deletes ALL quiz questions, answers, scores and resets quiz rounds to pending. Continue?')) return;
+  try {
+    const data = await fetchApi('/admin/quiz/reset', { method: 'POST' });
+    if (data) {
+      showAlert('Quiz reset complete', 'success');
+      initAdminQuiz();
+    }
+  } catch (err) {
+    showAlert(err.message, 'error');
+  }
+}
+
 async function deleteQuestion(id) {
   if (!confirm('Delete this question?')) return;
   try {
