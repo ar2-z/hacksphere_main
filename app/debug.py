@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 from .auth import get_current_user
 from .config import settings
 from .database import SessionLocal, get_db
-from .models import DebugChallenge, DebugSubmission, Round, Team, TeamMember
+from .models import DebugChallenge, DebugSubmission, Round, Team
+from .teams import ensure_user_team
 
 router = APIRouter(prefix="/api/debug", tags=["debug"])
 
@@ -18,10 +19,7 @@ _judge_semaphore = threading.BoundedSemaphore(4)
 _submit_lock = threading.Lock()
 
 def get_user_team(user, db):
-    tm = db.query(TeamMember).filter(TeamMember.user_id == user.id).first()
-    if not tm:
-        raise HTTPException(403, "Not a member of any team")
-    return db.query(Team).filter(Team.id == tm.team_id).first()
+    return ensure_user_team(db, user)
 
 def run_judge0(code, stdin, expected, headers):
     with httpx.Client(timeout=30) as client:

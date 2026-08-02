@@ -8,6 +8,31 @@ from .auth import get_current_user
 
 router = APIRouter(prefix="/api/teams", tags=["teams"])
 
+def ensure_user_team(db: Session, user) -> Team:
+    """Each login is its own single-member team. Auto-create one if the user has none."""
+    tm = db.query(TeamMember).filter(TeamMember.user_id == user.id).first()
+    if tm:
+        team = db.query(Team).filter(Team.id == tm.team_id).first()
+        if team:
+            return team
+    competition = db.query(Competition).filter(Competition.is_active == True).first()
+    competition_id = competition.id if competition else 1
+    invite_code = secrets.token_hex(4).upper()
+    while db.query(Team).filter(Team.invite_code == invite_code).first():
+        invite_code = secrets.token_hex(4).upper()
+    team = Team(
+        name=user.username,
+        competition_id=competition_id,
+        leader_id=user.id,
+        invite_code=invite_code,
+    )
+    db.add(team)
+    db.flush()
+    db.add(TeamMember(team_id=team.id, user_id=user.id))
+    db.commit()
+    db.refresh(team)
+    return team
+
 @router.post("/create")
 def create_team(data: TeamCreate, user=Depends(get_current_user), db: Session = Depends(get_db)):
     existing = db.query(TeamMember).filter(TeamMember.user_id == user.id).first()

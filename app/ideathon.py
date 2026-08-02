@@ -3,20 +3,18 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from .database import get_db
-from .models import IdeathonProblem, IdeathonSubmission, TeamMember, Team, Round, Competition
+from .models import IdeathonProblem, IdeathonSubmission, Team, Round, Competition
 from .schemas import IdeathonSubmit
 from .auth import get_current_user
 from .config import settings
+from .teams import ensure_user_team
 from typing import Optional
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/ideathon", tags=["ideathon"])
 
 def get_user_team(user, db):
-    tm = db.query(TeamMember).filter(TeamMember.user_id == user.id).first()
-    if not tm:
-        raise HTTPException(403, "Not a member of any team")
-    return db.query(Team).filter(Team.id == tm.team_id).first()
+    return ensure_user_team(db, user)
 
 @router.get("/problem")
 def get_problem(user=Depends(get_current_user), db: Session = Depends(get_db)):
