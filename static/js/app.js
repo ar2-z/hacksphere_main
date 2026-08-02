@@ -353,6 +353,10 @@ function initQuiz() {
     try {
       const data = await fetchApi('/quiz/round/current');
       if (!data) return;
+      if (data.team_required) {
+        showState('team-required');
+        return;
+      }
       if (data.status === 'inactive') {
         showState('waiting');
         setWaitingText('Quiz not yet started', 'Waiting for the admin to start the quiz round.');

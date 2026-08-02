@@ -315,10 +315,13 @@ def get_clues(round_number: int, user=Depends(get_current_user), db: Session = D
 @router.get("/round/current")
 def get_current_round(user=Depends(get_current_user), db: Session = Depends(get_db)):
     now = datetime.now(timezone.utc)
-    team = get_user_team(user, db)
+    tm = db.query(TeamMember).filter(TeamMember.user_id == user.id).first()
+    team = db.query(Team).filter(Team.id == tm.team_id).first() if tm else None
+    team_required = team is None
     base = {
         "round_number": None,
         "status": "inactive",
+        "team_required": team_required,
         "server_time": now.isoformat(),
         "started_at": None,
         "per_question_seconds": 120,
@@ -345,7 +348,7 @@ def get_current_round(user=Depends(get_current_user), db: Session = Depends(get_
         idx = _current_index(qs, elapsed, per_q) if not finished else -1
         q = qs[idx] if qs and idx >= 0 else None
         answered = False
-        if q:
+        if q and team:
             answered = (
                 db.query(Answer)
                 .filter(Answer.team_id == team.id, Answer.question_id == q.id)
@@ -356,6 +359,7 @@ def get_current_round(user=Depends(get_current_user), db: Session = Depends(get_
         return {
             "round_number": active.round_number,
             "status": "active",
+            "team_required": team_required,
             "server_time": now.isoformat(),
             "started_at": active.started_at.isoformat() if active.started_at else None,
             "per_question_seconds": per_q,
@@ -365,7 +369,7 @@ def get_current_round(user=Depends(get_current_user), db: Session = Depends(get_
             "finished": finished,
             "answered_current": answered,
             "time_limit_seconds": per_q,
-            "question": _question_payload(q) if q else None,
+            "question": _question_payload(q) if q and team else None,
         }
 
     completed = (
