@@ -278,11 +278,16 @@ function initDashboard() {
 }
 
 function initQuiz() {
-  let quizTimer = null;
-  let currentQuestionIndex = 0;
-  let questions = [];
-  let answers = {};
-  let roundInfo = {};
+  let ticker = null;
+  let currentIndex = 0;
+  let currentQuestion = null;
+  let startedAtMs = 0;
+  let perQuestionMs = 120000;
+  let clockOffsetMs = 0;
+  let answeredCurrent = false;
+  let fetching = false;
+  let totalQuestions = 0;
+  let lastBoundaryFetch = 0;
 
   function showState(state) {
     document.querySelectorAll('.quiz-state').forEach(el => el.classList.add('hidden'));
@@ -291,37 +296,18 @@ function initQuiz() {
     document.getElementById('quiz-loading').classList.add('hidden');
   }
 
-  async function loadQuizState() {
-    try {
-      const data = await fetchApi('/quiz/round/current');
-      if (!data) return;
-      roundInfo = data;
-      if (data.status === 'inactive' || data.status === 'paused') {
-        showState('waiting');
-        return;
-      }
-      if (data.status === 'completed') {
-        showState('results');
-        loadResults();
-        return;
-      }
-      showState('active');
-      document.getElementById('round-number').textContent = data.round_number || 1;
-      questions = data.questions || [];
-      if (questions.length > 0) {
-        renderQuestion();
-        startTimer(data.time_limit_seconds || 30 * questions.length);
-      }
-    } catch (e) {
-      showState('waiting');
-    }
+  function setWaitingText(title, text) {
+    const t = document.getElementById('quiz-waiting-title');
+    const p = document.getElementById('quiz-waiting-text');
+    if (t) t.textContent = title;
+    if (p) p.textContent = text;
   }
 
-  function renderQuestion() {
-    const q = questions[currentQuestionIndex];
+  function renderQuestion(q) {
     if (!q) return;
-    document.getElementById('question-current').textContent = currentQuestionIndex + 1;
-    document.getElementById('question-total').textContent = questions.length;
+    currentQuestion = q;
+    document.getElementById('question-current').textContent = currentIndex + 1;
+    document.getElementById('question-total').textContent = totalQuestions || 10;
     document.getElementById('question-text').textContent = q.question_text;
     const options = ['A', 'B', 'C', 'D'];
     document.querySelectorAll('.option-btn').forEach((btn, idx) => {
@@ -329,54 +315,127 @@ function initQuiz() {
       btn.dataset.option = opt;
       btn.querySelector('.option-text').textContent = q[`option_${opt.toLowerCase()}`] || '';
       btn.className = 'option-btn';
-      btn.disabled = false;
-      if (answers[`q_${q.id}`] === opt) btn.classList.add('selected');
+      btn.disabled = answeredCurrent;
     });
+    const statusEl = document.getElementById('answer-status');
+    if (statusEl) {
+      if (answeredCurrent) {
+        statusEl.textContent = 'Answer submitted. Waiting for the next question...';
+        statusEl.classList.remove('hidden');
+      } else {
+        statusEl.classList.add('hidden');
+      }
+    }
   }
 
-  function startTimer(totalSeconds) {
-    if (quizTimer) clearInterval(quizTimer);
-    let remaining = totalSeconds;
+  function startTicker() {
+    if (ticker) clearInterval(ticker);
     const timerEl = document.getElementById('quiz-timer');
-    function tick() {
+    ticker = setInterval(() => {
+      const now = Date.now() + clockOffsetMs;
+      const questionEnd = startedAtMs + (currentIndex + 1) * perQuestionMs;
+      const remaining = Math.max(0, Math.ceil((questionEnd - now) / 1000));
       timerEl.textContent = formatTime(remaining);
-      timerEl.parentElement.className = 'glass-card timer-card';
-      if (remaining <= 10) timerEl.parentElement.classList.add('timer-critical');
-      else if (remaining <= 30) timerEl.parentElement.classList.add('timer-warning');
-      if (remaining <= 0) {
-        clearInterval(quizTimer);
-        submitAllAnswers();
+      const card = timerEl.parentElement;
+      card.className = 'glass-card timer-card';
+      if (remaining <= 10) card.classList.add('timer-critical');
+      else if (remaining <= 30) card.classList.add('timer-warning');
+      if (remaining <= 0 && !fetching && Date.now() - lastBoundaryFetch > 1000) {
+        lastBoundaryFetch = Date.now();
+        loadQuizState();
       }
-      remaining--;
+    }, 250);
+  }
+
+  async function loadQuizState() {
+    if (fetching) return;
+    fetching = true;
+    try {
+      const data = await fetchApi('/quiz/round/current');
+      if (!data) return;
+      if (data.status === 'inactive') {
+        showState('waiting');
+        setWaitingText('Quiz not yet started', 'Waiting for the admin to start the quiz round.');
+        return;
+      }
+      if (data.status === 'paused') {
+        showState('waiting');
+        setWaitingText('Quiz Paused', 'The admin has paused the quiz. Hang tight.');
+        return;
+      }
+      if (data.status === 'completed' || data.finished) {
+        showState('results');
+        loadResults();
+        return;
+      }
+      startedAtMs = new Date(data.started_at).getTime();
+      perQuestionMs = (data.per_question_seconds || 120) * 1000;
+      clockOffsetMs = new Date(data.server_time).getTime() - Date.now();
+      totalQuestions = data.total_questions || 0;
+      const q = data.question;
+      if (!q) {
+        showState('results');
+        loadResults();
+        return;
+      }
+      if (currentIndex !== data.question_index || !currentQuestion || currentQuestion.id !== q.id) {
+        currentIndex = data.question_index;
+        answeredCurrent = data.answered_current;
+        renderQuestion(q);
+      } else {
+        answeredCurrent = data.answered_current;
+        if (answeredCurrent) renderQuestion(q);
+      }
+      showState('active');
+      document.getElementById('round-number').textContent = data.round_number || 1;
+      startTicker();
+    } catch (e) {
+      showState('waiting');
+    } finally {
+      fetching = false;
     }
-    tick();
-    quizTimer = setInterval(tick, 1000);
   }
 
   document.querySelectorAll('.option-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const q = questions[currentQuestionIndex];
-      if (!q || btn.disabled) return;
+      const q = currentQuestion;
+      if (!q || btn.disabled || answeredCurrent) return;
       const option = btn.dataset.option;
-      answers[`q_${q.id}`] = option;
+      btn.disabled = true;
       document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
+      const statusEl = document.getElementById('answer-status');
       try {
-        await fetchApi('/quiz/answer', {
+        const data = await fetchApi('/quiz/answer', {
           method: 'POST',
           body: JSON.stringify({ question_id: q.id, selected_option: option })
         });
-      } catch (e) {}
+        if (data && data.is_correct !== undefined) {
+          answeredCurrent = true;
+          document.querySelectorAll('.option-btn').forEach(b => { b.disabled = true; });
+          if (statusEl) {
+            const pts = data.points_earned ?? 0;
+            statusEl.textContent = data.is_correct ? `Correct! +${pts} pts` : 'Wrong answer. No points.';
+            statusEl.classList.remove('hidden');
+          }
+        } else if (data && data.detail === 'Already answered') {
+          answeredCurrent = true;
+          document.querySelectorAll('.option-btn').forEach(b => { b.disabled = true; });
+          if (statusEl) {
+            statusEl.textContent = 'Answer already submitted.';
+            statusEl.classList.remove('hidden');
+          }
+        }
+      } catch (e) {
+        btn.disabled = false;
+        btn.classList.remove('selected');
+        if (statusEl) {
+          statusEl.textContent = e.message || 'Submission failed. Try again.';
+          statusEl.classList.remove('hidden');
+        }
+      }
     });
   });
-
-  async function submitAllAnswers() {
-    try {
-      await fetchApi('/quiz/submit', { method: 'POST' });
-      showState('results');
-      loadResults();
-    } catch (e) {}
-  }
 
   async function loadResults() {
     try {
@@ -398,7 +457,7 @@ function initQuiz() {
   }
 
   loadQuizState();
-  setInterval(loadQuizState, 5000);
+  setInterval(loadQuizState, 3000);
 }
 
 function initDebug() {

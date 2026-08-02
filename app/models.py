@@ -214,4 +214,6 @@ class Round(Base):
     status = Column(String, default="pending")
     time_limit_minutes = Column(Integer, nullable=True)
     started_at = Column(DateTime, nullable=True)
+    paused_at = Column(DateTime, nullable=True)
+    total_paused_seconds = Column(Integer, default=0)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

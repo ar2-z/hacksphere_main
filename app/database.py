@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from .config import settings
 
@@ -28,9 +28,19 @@ def get_db():
     finally:
         db.close()
 
+def _ensure_round_columns():
+    is_pg = "postgresql" in settings.database_url
+    with engine.begin() as conn:
+        cols = {c["name"] for c in inspect(engine).get_columns("rounds")}
+        if "paused_at" not in cols:
+            col_type = "TIMESTAMP WITH TIME ZONE" if is_pg else "DATETIME"
+            conn.execute(text(f"ALTER TABLE rounds ADD COLUMN paused_at {col_type}"))
+        if "total_paused_seconds" not in cols:
+            conn.execute(text("ALTER TABLE rounds ADD COLUMN total_paused_seconds INTEGER NOT NULL DEFAULT 0"))
+
+
 def init_db():
     from . import models
-    from sqlalchemy import text
     try:
         models.Base.metadata.create_all(bind=engine)
         db = SessionLocal()
@@ -55,6 +65,7 @@ def init_db():
         with engine.connect() as conn:
             conn.execute(text("ALTER TABLE violations ALTER COLUMN team_id DROP NOT NULL"))
             conn.commit()
+    _ensure_round_columns()
     db = SessionLocal()
     try:
         competition = db.query(models.Competition).first()

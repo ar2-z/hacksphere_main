@@ -5,6 +5,7 @@ from .database import get_db
 from .models import User, Team, TeamMember, Round, Competition, Score, Violation, Announcement, IdeathonSubmission, IdeathonProblem, Question, DebugChallenge, DebugSubmission
 from .schemas import AnnouncementCreate
 from .auth import get_current_user, require_role
+from .quiz import start_round, pause_round, resume_round
 from datetime import datetime, timedelta, timezone
 
 router = APIRouter(
@@ -200,8 +201,7 @@ def start_quiz_round(round_number: int, db: Session = Depends(get_db)):
     ).first()
     if not round_:
         raise HTTPException(status_code=404, detail="Round not found")
-    round_.status = "active"
-    round_.started_at = datetime.now(timezone.utc)
+    start_round(round_, db)
     db.query(Competition).filter(Competition.is_active.is_(True)).update({"current_phase": "quiz"})
     db.commit()
     return {"detail": f"Quiz round {round_number} started"}
@@ -214,7 +214,7 @@ def pause_quiz_round(round_number: int, db: Session = Depends(get_db)):
     ).first()
     if not round_:
         raise HTTPException(status_code=404, detail="Round not found")
-    round_.status = "paused"
+    pause_round(round_, db)
     db.commit()
     return {"detail": f"Quiz round {round_number} paused"}
 
@@ -226,7 +226,7 @@ def resume_quiz_round(round_number: int, db: Session = Depends(get_db)):
     ).first()
     if not round_:
         raise HTTPException(status_code=404, detail="Round not found")
-    round_.status = "active"
+    resume_round(round_, db)
     db.commit()
     return {"detail": f"Quiz round {round_number} resumed"}
 
@@ -409,13 +409,12 @@ def quiz_round_action(round_number: int, action: str, db: Session = Depends(get_
     if not rnd:
         raise HTTPException(404, "Round not found")
     if action == "start":
-        rnd.status = "active"
-        rnd.started_at = datetime.now(timezone.utc)
+        start_round(rnd, db)
         db.query(Competition).filter(Competition.is_active == True).update({"current_phase": "quiz"})
     elif action == "pause":
-        rnd.status = "paused"
+        pause_round(rnd, db)
     elif action == "resume":
-        rnd.status = "active"
+        resume_round(rnd, db)
     elif action == "end":
         rnd.status = "completed"
     else:
@@ -604,8 +603,7 @@ def admin_quiz_start(db: Session = Depends(get_db)):
     if not rnd:
         rnd = db.query(Round).filter(Round.phase == "quiz").order_by(Round.round_number).first()
     if rnd:
-        rnd.status = "active"
-        rnd.started_at = datetime.now(timezone.utc)
+        start_round(rnd, db)
     db.query(Competition).filter(Competition.is_active == True).update({"current_phase": "quiz"})
     db.commit()
     return {"detail": "Quiz started"}
@@ -613,7 +611,7 @@ def admin_quiz_start(db: Session = Depends(get_db)):
 @router.post("/quiz/pause")
 def admin_quiz_pause(db: Session = Depends(get_db)):
     for rnd in db.query(Round).filter(Round.phase == "quiz", Round.status == "active").all():
-        rnd.status = "paused"
+        pause_round(rnd, db)
     db.commit()
     return {"detail": "Quiz paused"}
 

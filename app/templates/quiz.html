@@ -15,8 +15,8 @@
   <div id="quiz-loading" class="loading-state">Loading quiz...</div>
   <div id="quiz-waiting" class="quiz-state hidden">
     <div class="glass-card text-center">
-      <h2>Quiz not yet started</h2>
-      <p>Waiting for the admin to start the quiz round.</p>
+      <h2 id="quiz-waiting-title">Quiz not yet started</h2>
+      <p id="quiz-waiting-text">Waiting for the admin to start the quiz round.</p>
     </div>
   </div>
   <div id="quiz-active" class="quiz-state hidden">
@@ -30,6 +30,7 @@
         <span id="quiz-timer" class="timer-value">00:00</span>
       </div>
     </div>
+    <div class="quiz-hint">Scoring per question: 1st correct = 10 &middot; 2nd = 8 &middot; 3rd = 6 &middot; others = 5 &middot; unattempted = 0</div>
     <div class="glass-card question-card">
       <div class="question-counter">
         Question <span id="question-current">1</span> of <span id="question-total">10</span>
@@ -41,6 +42,7 @@
         <button class="option-btn" data-option="C">C: <span class="option-text"></span></button>
         <button class="option-btn" data-option="D">D: <span class="option-text"></span></button>
       </div>
+      <div id="answer-status" class="answer-status hidden"></div>
     </div>
   </div>
   <div id="quiz-results" class="quiz-state hidden">
