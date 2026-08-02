@@ -361,6 +361,27 @@ function initQuiz() {
         setWaitingText('Quiz Paused', 'The admin has paused the quiz. Hang tight.');
         return;
       }
+      if (data.countdown) {
+        showState('countdown');
+        clearInterval(ticker);
+        let n = Math.max(1, data.starts_in || 5);
+        const secEl = document.getElementById('countdown-sec');
+        const numEl = document.getElementById('countdown-number');
+        const render = () => {
+          if (secEl) secEl.textContent = n;
+          if (numEl) numEl.textContent = n;
+        };
+        render();
+        ticker = setInterval(() => {
+          n--;
+          if (n <= 0) {
+            loadQuizState();
+            return;
+          }
+          render();
+        }, 1000);
+        return;
+      }
       if (data.status === 'completed' || data.finished) {
         showState('results');
         loadResults();
@@ -907,7 +928,12 @@ function initAdminQuiz() {
       container.innerHTML = questions.map(q => `
         <div class="question-card-item">
           <div class="q-text">${q.question_text}</div>
-          <div class="q-options">A: ${q.option_a} | B: ${q.option_b} | C: ${q.option_c} | D: ${q.option_d}</div>
+          <div class="q-options-grid">
+            <div class="q-option"><span class="q-opt-label">A.</span>${q.option_a}</div>
+            <div class="q-option"><span class="q-opt-label">B.</span>${q.option_b}</div>
+            <div class="q-option"><span class="q-opt-label">C.</span>${q.option_c}</div>
+            <div class="q-option"><span class="q-opt-label">D.</span>${q.option_d}</div>
+          </div>
           <div class="q-meta">Correct: ${q.correct_answer} | ${q.difficulty} | ${q.points}pts | ${q.time_limit_seconds}s</div>
           <div class="card-actions">
             <button class="btn btn-sm btn-danger" onclick="deleteQuestion(${q.id})">Delete</button>

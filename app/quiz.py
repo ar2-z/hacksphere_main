@@ -1,4 +1,5 @@
 import json
+import math
 import threading
 from datetime import datetime, timezone
 
@@ -18,6 +19,8 @@ router = APIRouter(prefix="/api/quiz", tags=["quiz"])
 QUIZ_POINTS_LADDER = (10, 8, 6, 5)
 # Small window in seconds past a question's deadline where late submissions still count.
 WINDOW_GRACE_SECONDS = 3
+# Seconds shown to participants after the admin starts a round before Q1 opens.
+START_DELAY_SECONDS = 5
 
 _position_lock = threading.Lock()
 
@@ -67,6 +70,11 @@ def effective_elapsed(rnd, now=None):
     if rnd.status == "paused" and rnd.paused_at is not None:
         paused += (now - _to_utc(rnd.paused_at)).total_seconds()
     return max(0.0, (now - start).total_seconds() - paused)
+
+
+def active_elapsed(rnd, now=None):
+    """Seconds the round has run past the pre-start countdown (0 before questions open)."""
+    return max(0.0, effective_elapsed(rnd, now) - START_DELAY_SECONDS)
 
 
 def ordered_questions(db, round_number):
@@ -192,7 +200,9 @@ def _record_answer(db, team, q, selected_answer):
         raise HTTPException(400, "Question is not part of the round")
     q_idx = ids.index(q.id)
     per_q = q.time_limit_seconds or 120
-    elapsed = effective_elapsed(rnd)
+    if effective_elapsed(rnd) < START_DELAY_SECONDS:
+        raise HTTPException(400, "Quiz is starting, questions not open yet")
+    elapsed = active_elapsed(rnd)
     if elapsed >= len(qs) * per_q:
         raise HTTPException(400, "Quiz has ended")
     q_start = q_idx * per_q
@@ -249,7 +259,9 @@ def list_questions(
     get_user_team(user, db)
     qs = ordered_questions(db, round_number)
     per_q = qs[0].time_limit_seconds if qs else 120
-    elapsed = effective_elapsed(rnd)
+    if effective_elapsed(rnd) < START_DELAY_SECONDS:
+        return []
+    elapsed = active_elapsed(rnd)
     if elapsed >= len(qs) * per_q:
         return []
     idx = _current_index(qs, elapsed, per_q)
@@ -340,6 +352,24 @@ def get_current_round(user=Depends(get_current_user), db: Session = Depends(get_
         qs = ordered_questions(db, active.round_number)
         per_q = qs[0].time_limit_seconds if qs else 120
         elapsed = effective_elapsed(active, now)
+        if elapsed < START_DELAY_SECONDS:
+            return {
+                "round_number": active.round_number,
+                "status": "active",
+                "countdown": True,
+                "starts_in": max(1, math.ceil(START_DELAY_SECONDS - elapsed)),
+                "server_time": now.isoformat(),
+                "started_at": active.started_at.isoformat() if active.started_at else None,
+                "per_question_seconds": per_q,
+                "question_index": -1,
+                "total_questions": len(qs),
+                "remaining_seconds": max(0, int(START_DELAY_SECONDS - elapsed)),
+                "finished": False,
+                "answered_current": False,
+                "time_limit_seconds": per_q,
+                "question": None,
+            }
+        elapsed = active_elapsed(active, now)
         finished = (not qs) or elapsed >= len(qs) * per_q
         idx = _current_index(qs, elapsed, per_q) if not finished else -1
         q = qs[idx] if qs and idx >= 0 else None

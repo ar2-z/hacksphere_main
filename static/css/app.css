@@ -281,6 +281,14 @@ option { background: var(--card-bg); color: var(--text); }
 .timer-value { color: var(--accent2); }
 .timer-warning .timer-value { color: var(--warning); }
 .timer-critical .timer-value { color: var(--danger); animation: pulse 1s infinite; }
+.countdown-card { padding: 3rem 2rem; }
+.countdown-number {
+  font-size: 5rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1.1;
+  animation: pulse 1s infinite;
+}
 .question-card { padding: 2rem; }
 .question-counter { font-size: .85rem; color: var(--muted); margin-bottom: .75rem; }
 .question-text { font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; line-height: 1.5; }
@@ -468,9 +476,29 @@ option { background: var(--card-bg); color: var(--text); }
   border-radius: var(--radius-sm);
   padding: 1rem 1.25rem;
 }
-.question-card-item .q-text { font-weight: 600; margin-bottom: .5rem; }
-.question-card-item .q-options { font-size: .85rem; color: var(--muted); }
-.question-card-item .q-meta { font-size: .8rem; color: var(--muted); margin-top: .5rem; }
+.question-card-item .q-text {
+  font-weight: 600;
+  margin-bottom: .75rem;
+  padding: .75rem 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.question-card-item .q-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .5rem;
+}
+.question-card-item .q-option {
+  padding: .55rem .75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .85rem;
+  color: #cfcfe6;
+}
+.question-card-item .q-option .q-opt-label { color: var(--accent2); font-weight: 600; margin-right: .4rem; }
+.question-card-item .q-meta { font-size: .8rem; color: var(--muted); margin-top: .6rem; }
 .card-actions { display: flex; gap: .5rem; margin-top: .75rem; }
 .ideathon-team-card { display: grid; grid-template-columns: 1fr 2fr 1fr 1fr; gap: .75rem; align-items: center; padding: 1rem; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .ideathon-team-card .score-input { width: 80px; }
