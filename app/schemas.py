@@ -5,12 +5,14 @@ from datetime import datetime
 class LoginRequest(BaseModel):
     username: str
     password: str
+    team_name: str = ""
 
 class RegisterRequest(BaseModel):
     username: str
     email: str
     full_name: str
     password: str = Field(min_length=8)
+    team_name: str = ""
 
 class ChangePasswordRequest(BaseModel):
     current_password: str

@@ -37,10 +37,10 @@ async function fetchApi(url, options = {}) {
   }
 }
 
-async function loginUser(username, password) {
+async function loginUser(username, password, teamName) {
   const data = await fetchApi('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ username, password })
+    body: JSON.stringify({ username, password, team_name: teamName || '' })
   });
   if (data && data.access_token) {
     localStorage.setItem('hacksphere_token', data.access_token);
@@ -136,9 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
+      const teamName = document.getElementById('team_name')?.value || '';
       const errEl = document.getElementById('error-message');
       try {
-        const data = await loginUser(username, password);
+        const data = await loginUser(username, password, teamName);
         if (data && data.access_token) {
           window.location.href = '/dashboard';
         } else {
@@ -161,7 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
         username: document.getElementById('username').value,
         email: document.getElementById('email').value,
         password: document.getElementById('password').value,
-        confirm_password: document.getElementById('confirm_password').value
+        confirm_password: document.getElementById('confirm_password').value,
+        team_name: document.getElementById('team_name')?.value || ''
       };
       const errEl = document.getElementById('error-message');
       try {
@@ -281,9 +283,7 @@ function initQuiz() {
   let ticker = null;
   let currentIndex = 0;
   let currentQuestion = null;
-  let startedAtMs = 0;
-  let perQuestionMs = 120000;
-  let clockOffsetMs = 0;
+  let remainingSec = 0;
   let answeredCurrent = false;
   let fetching = false;
   let totalQuestions = 0;
@@ -332,19 +332,17 @@ function initQuiz() {
     if (ticker) clearInterval(ticker);
     const timerEl = document.getElementById('quiz-timer');
     ticker = setInterval(() => {
-      const now = Date.now() + clockOffsetMs;
-      const questionEnd = startedAtMs + (currentIndex + 1) * perQuestionMs;
-      const remaining = Math.max(0, Math.ceil((questionEnd - now) / 1000));
-      timerEl.textContent = formatTime(remaining);
+      if (remainingSec > 0) remainingSec--;
+      timerEl.textContent = formatTime(remainingSec);
       const card = timerEl.parentElement;
       card.className = 'glass-card timer-card';
-      if (remaining <= 10) card.classList.add('timer-critical');
-      else if (remaining <= 30) card.classList.add('timer-warning');
-      if (remaining <= 0 && !fetching && Date.now() - lastBoundaryFetch > 1000) {
+      if (remainingSec <= 10) card.classList.add('timer-critical');
+      else if (remainingSec <= 30) card.classList.add('timer-warning');
+      if (remainingSec <= 0 && !fetching && Date.now() - lastBoundaryFetch > 1000) {
         lastBoundaryFetch = Date.now();
         loadQuizState();
       }
-    }, 250);
+    }, 1000);
   }
 
   async function loadQuizState() {
@@ -368,9 +366,7 @@ function initQuiz() {
         loadResults();
         return;
       }
-      startedAtMs = new Date(data.started_at).getTime();
-      perQuestionMs = (data.per_question_seconds || 120) * 1000;
-      clockOffsetMs = new Date(data.server_time).getTime() - Date.now();
+      remainingSec = data.remaining_seconds || 0;
       totalQuestions = data.total_questions || 0;
       const q = data.question;
       if (!q) {
@@ -414,8 +410,7 @@ function initQuiz() {
           answeredCurrent = true;
           document.querySelectorAll('.option-btn').forEach(b => { b.disabled = true; });
           if (statusEl) {
-            const pts = data.points_earned ?? 0;
-            statusEl.textContent = data.is_correct ? `Correct! +${pts} pts` : 'Wrong answer. No points.';
+            statusEl.textContent = 'Submitted successfully';
             statusEl.classList.remove('hidden');
           }
         } else if (data && data.detail === 'Already answered') {

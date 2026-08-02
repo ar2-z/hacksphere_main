@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     upload_dir: str = "./uploads"
     max_upload_size_mb: int = 20
     cors_origins: str = "http://localhost:8000,http://127.0.0.1:8000"
+    admin_signup_password: str = ""
 
     @property
     def cors_origins_list(self) -> list[str]:

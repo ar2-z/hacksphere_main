@@ -25,7 +25,7 @@ from .ideathon import router as ideathon_router
 from .admin import router as admin_router
 from .leaderboard import router as leaderboard_router
 from .heartbeat import router as heartbeat_router
-from .teams import router as teams_router
+from .teams import router as teams_router, ensure_user_team
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -87,6 +87,8 @@ def login_user(request: Request, data: LoginRequest, db: Session = Depends(get_d
             detail="Invalid credentials",
         )
     login_limiter.reset(limiter_key)
+    if user.role != "admin":
+        ensure_user_team(db, user, team_name=data.team_name)
     token = create_access_token({"user_id": user.id, "role": user.role})
     return TokenResponse(
         access_token=token,

